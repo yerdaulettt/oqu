@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"oqu/internal/handlers"
+	"oqu/internal/middleware"
 )
 
 func Bastau(db *sql.DB) {
@@ -15,5 +16,5 @@ func Bastau(db *sql.DB) {
 
 	r.HandleFunc("GET /lessons", lesson.Get)
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(http.ListenAndServe(":8080", middleware.LogMiddleware(r)))
 }
