@@ -1,10 +1,10 @@
-package dbconn
+package postgresql
 
 import (
 	"database/sql"
 	"fmt"
 
-	"oqu/pkg/config"
+	"oqu/pkg/configs"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -12,11 +12,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func autoMigrate(cfg *config.PostgresqlConfig) {
-	sourceURL := "file://migrations"
-	databaseURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.Sslmode)
+func autoMigrate(cfg *configs.PostgresqlConfig) {
+	source := "file://migrations"
+	destination := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.Sslmode)
 
-	m, err := migrate.New(sourceURL, databaseURL)
+	m, err := migrate.New(source, destination)
 	if err != nil {
 		panic(err)
 	}
@@ -28,7 +28,7 @@ func autoMigrate(cfg *config.PostgresqlConfig) {
 	}
 }
 
-func GetDBConn(cfg *config.PostgresqlConfig) *sql.DB {
+func NewPostgresqlConn(cfg *configs.PostgresqlConfig) *sql.DB {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.DBName, cfg.Sslmode)
 
 	db, err := sql.Open("postgres", dsn)

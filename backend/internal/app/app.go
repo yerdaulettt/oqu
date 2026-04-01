@@ -12,9 +12,9 @@ import (
 func Bastau(db *sql.DB) {
 	r := http.NewServeMux()
 
-	lesson := handlers.NewLessonHandler(db)
+	lesson := handlers.NewCourseHandler(db)
 
-	r.HandleFunc("GET /lessons", lesson.Get)
+	r.HandleFunc("GET /courses", lesson.Get)
 
 	log.Fatal(http.ListenAndServe(":8080", middleware.LogMiddleware(r)))
 }

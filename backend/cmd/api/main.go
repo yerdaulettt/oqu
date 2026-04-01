@@ -2,8 +2,8 @@ package main
 
 import (
 	"oqu/internal/app"
-	"oqu/internal/dbconn"
-	"oqu/pkg/config"
+	"oqu/internal/repository/postgresql"
+	"oqu/pkg/configs"
 
 	"github.com/joho/godotenv"
 )
@@ -13,8 +13,8 @@ func main() {
 		panic(err)
 	}
 
-	cfg := config.NewPostgresqlConfig()
-	db := dbconn.GetDBConn(cfg)
+	cfg := configs.NewPostgresqlConfig()
+	db := postgresql.NewPostgresqlConn(cfg)
 	defer db.Close()
 
 	app.Bastau(db)
