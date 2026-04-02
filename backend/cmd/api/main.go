@@ -2,8 +2,8 @@ package main
 
 import (
 	"oqu/internal/app"
+	"oqu/internal/configs"
 	"oqu/internal/repository/postgresql"
-	"oqu/pkg/configs"
 
 	"github.com/joho/godotenv"
 )

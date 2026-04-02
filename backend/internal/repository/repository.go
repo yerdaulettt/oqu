@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+
 	"oqu/internal/repository/postgresql/course"
 )
 
