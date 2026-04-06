@@ -18,13 +18,13 @@ func NewCourseHandler(s service.CourseService) *courseHandler {
 func (c *courseHandler) Get(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	courses, err := c.service.Get()
-	if err != nil {
-		w.Write([]byte(`{"error":"` + err.Error() + `"}`))
+	courses := c.service.Get()
+	if courses == nil {
+		w.Write([]byte(`{"error":"internal server error"}`))
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(&courses)
+	err := json.NewEncoder(w).Encode(&courses)
 	if err != nil {
 		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
 	}
