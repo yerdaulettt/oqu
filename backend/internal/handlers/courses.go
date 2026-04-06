@@ -1,24 +1,31 @@
 package handlers
 
 import (
-	"database/sql"
+	"encoding/json"
 	"net/http"
 
-	"oqu/internal/usecase"
+	"oqu/internal/service"
 )
 
 type courseHandler struct {
-	usecase usecase.CourseUsecase
+	service service.CourseService
 }
 
-func NewCourseHandler(db *sql.DB) *courseHandler {
-	return &courseHandler{
-		usecase: usecase.NewCourseUsecase(db),
-	}
+func NewCourseHandler(s service.CourseService) *courseHandler {
+	return &courseHandler{service: s}
 }
 
 func (c *courseHandler) Get(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	c.usecase.Get()
-	w.Write([]byte(`{"msg":"all courses"}`))
+
+	courses, err := c.service.Get()
+	if err != nil {
+		w.Write([]byte(`{"error":"` + err.Error() + `"}`))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&courses)
+	if err != nil {
+		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
+	}
 }

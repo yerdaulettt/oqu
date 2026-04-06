@@ -7,14 +7,18 @@ import (
 
 	"oqu/internal/handlers"
 	"oqu/internal/middleware"
+	"oqu/internal/repository/postgresql/course"
+	"oqu/internal/service"
 )
 
 func Bastau(db *sql.DB) {
 	r := http.NewServeMux()
 
-	lesson := handlers.NewCourseHandler(db)
+	repo := course.NewCourseRepo(db)
+	service := service.NewCourseService(repo)
+	handler := handlers.NewCourseHandler(service)
 
-	r.HandleFunc("GET /courses", lesson.Get)
+	r.HandleFunc("GET /courses", handler.Get)
 
 	log.Fatal(http.ListenAndServe(":8080", middleware.LogMiddleware(r)))
 }

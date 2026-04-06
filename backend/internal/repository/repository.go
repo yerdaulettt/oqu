@@ -1,21 +1,7 @@
 package repository
 
-import (
-	"database/sql"
-
-	"oqu/internal/repository/postgresql/course"
-)
+import "oqu/internal/models"
 
 type CourseRepository interface {
-	GetCourses()
-}
-
-type repositories struct {
-	CourseRepository
-}
-
-func NewRepositories(db *sql.DB) *repositories {
-	return &repositories{
-		CourseRepository: course.NewCourseRepo(db),
-	}
+	GetCourses() ([]models.Course, error)
 }
