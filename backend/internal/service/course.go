@@ -33,3 +33,13 @@ func (s *courseService) GetById(id int) *models.Course {
 
 	return course
 }
+
+func (s *courseService) Delete(id int) *models.Course {
+	result, err := s.repo.DeleteCourse(id)
+	if err != nil {
+		log.Println("course service error:", err)
+		return nil
+	}
+
+	return result
+}

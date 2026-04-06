@@ -45,3 +45,14 @@ func (c *courseRepo) GetCourseById(id int) (*models.Course, error) {
 
 	return &course, nil
 }
+
+func (c *courseRepo) DeleteCourse(id int) (*models.Course, error) {
+	var deleted models.Course
+	query := `delete from courses where id = $1 returning *`
+	err := c.db.QueryRow(query, id).Scan(&deleted.Id, &deleted.Name, &deleted.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	return &deleted, nil
+}
