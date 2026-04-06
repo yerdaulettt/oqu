@@ -33,3 +33,15 @@ func (c *courseRepo) GetCourses() ([]models.Course, error) {
 
 	return courses, nil
 }
+
+func (c *courseRepo) GetCourseById(id int) (*models.Course, error) {
+	var course models.Course
+
+	query := `select id, name, description from courses where id = $1`
+	err := c.db.QueryRow(query, id).Scan(&course.Id, &course.Name, &course.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	return &course, nil
+}

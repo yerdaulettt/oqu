@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"oqu/internal/service"
 )
@@ -25,6 +26,27 @@ func (c *courseHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := json.NewEncoder(w).Encode(&courses)
+	if err != nil {
+		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
+	}
+}
+
+func (c *courseHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		w.Write([]byte(`{"error": "provide number"}`))
+		return
+	}
+
+	course := c.service.GetById(id)
+	if course == nil {
+		w.Write([]byte(`{"error": "internal server error"}`))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(course)
 	if err != nil {
 		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
 	}

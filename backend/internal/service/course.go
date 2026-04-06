@@ -23,3 +23,13 @@ func (s *courseService) Get() []models.Course {
 
 	return courses
 }
+
+func (s *courseService) GetById(id int) *models.Course {
+	course, err := s.repo.GetCourseById(id)
+	if err != nil {
+		log.Println("course service error:", err)
+		return nil
+	}
+
+	return course
+}

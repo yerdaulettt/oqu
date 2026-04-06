@@ -19,6 +19,7 @@ func Bastau(db *sql.DB) {
 	handler := handlers.NewCourseHandler(service)
 
 	r.HandleFunc("GET /courses", handler.Get)
+	r.HandleFunc("GET /courses/{id}", handler.GetById)
 
 	log.Fatal(http.ListenAndServe(":8080", middleware.LogMiddleware(r)))
 }
