@@ -44,6 +44,16 @@ func (s *courseService) GetCourseLessons(id int) []models.Lesson {
 	return lessons
 }
 
+func (s *courseService) MakeCourse(c *models.Course) int {
+	id, err := s.repo.MakeCourse(c)
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+
+	return id
+}
+
 func (s *courseService) Delete(id int) *models.Course {
 	result, err := s.repo.DeleteCourse(id)
 	if err != nil {

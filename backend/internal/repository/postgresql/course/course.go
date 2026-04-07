@@ -14,10 +14,10 @@ func NewCourseRepo(db *sql.DB) *courseRepo {
 	return &courseRepo{db: db}
 }
 
-func (c *courseRepo) GetCourses() ([]models.Course, error) {
+func (r *courseRepo) GetCourses() ([]models.Course, error) {
 	var courses []models.Course
 
-	rows, err := c.db.Query("select id, name, description from courses")
+	rows, err := r.db.Query("select id, name, description from courses")
 	if err != nil {
 		return nil, err
 	}
@@ -35,11 +35,11 @@ func (c *courseRepo) GetCourses() ([]models.Course, error) {
 	return courses, nil
 }
 
-func (c *courseRepo) GetCourseById(id int) (*models.Course, error) {
+func (r *courseRepo) GetCourseById(id int) (*models.Course, error) {
 	var course models.Course
 
 	query := `select id, name, description from courses where id = $1`
-	err := c.db.QueryRow(query, id).Scan(&course.Id, &course.Name, &course.Description)
+	err := r.db.QueryRow(query, id).Scan(&course.Id, &course.Name, &course.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -47,11 +47,11 @@ func (c *courseRepo) GetCourseById(id int) (*models.Course, error) {
 	return &course, nil
 }
 
-func (c *courseRepo) GetCourseLessons(id int) ([]models.Lesson, error) {
+func (r *courseRepo) GetCourseLessons(id int) ([]models.Lesson, error) {
 	var courseLessons []models.Lesson
 
 	query := `select l.id, l.name, l.content from courses as c join lessons as l on c.id = l.course_id where c.id = $1`
-	rows, err := c.db.Query(query, id)
+	rows, err := r.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -69,10 +69,21 @@ func (c *courseRepo) GetCourseLessons(id int) ([]models.Lesson, error) {
 	return courseLessons, nil
 }
 
-func (c *courseRepo) DeleteCourse(id int) (*models.Course, error) {
+func (r *courseRepo) MakeCourse(c *models.Course) (int, error) {
+	var id int
+	query := `insert into courses values(default, $1, $2) returning id`
+	err := r.db.QueryRow(query, c.Name, c.Description).Scan(&id)
+	if err != nil {
+		return id, err
+	}
+
+	return id, nil
+}
+
+func (r *courseRepo) DeleteCourse(id int) (*models.Course, error) {
 	var deleted models.Course
 	query := `delete from courses where id = $1 returning *`
-	err := c.db.QueryRow(query, id).Scan(&deleted.Id, &deleted.Name, &deleted.Description)
+	err := r.db.QueryRow(query, id).Scan(&deleted.Id, &deleted.Name, &deleted.Description)
 	if err != nil {
 		return nil, err
 	}
