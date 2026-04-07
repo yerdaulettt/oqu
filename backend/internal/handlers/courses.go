@@ -52,6 +52,27 @@ func (c *courseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c *courseHandler) GetCourseLessons(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		w.Write([]byte(`{"error": "provide number"}`))
+		return
+	}
+
+	lessons := c.service.GetCourseLessons(id)
+	if lessons == nil {
+		w.Write([]byte(`{"error": "internal server error"}`))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&lessons)
+	if err != nil {
+		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
+	}
+}
+
 func (c *courseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

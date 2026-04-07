@@ -2,6 +2,7 @@ package course
 
 import (
 	"database/sql"
+
 	"oqu/internal/models"
 )
 
@@ -44,6 +45,28 @@ func (c *courseRepo) GetCourseById(id int) (*models.Course, error) {
 	}
 
 	return &course, nil
+}
+
+func (c *courseRepo) GetCourseLessons(id int) ([]models.Lesson, error) {
+	var courseLessons []models.Lesson
+
+	query := `select l.id, l.name, l.content from courses as c join lessons as l on c.id = l.course_id where c.id = $1`
+	rows, err := c.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var lesson models.Lesson
+		err := rows.Scan(&lesson.Id, &lesson.Name, &lesson.Content)
+		if err != nil {
+			return nil, err
+		}
+		courseLessons = append(courseLessons, lesson)
+	}
+
+	return courseLessons, nil
 }
 
 func (c *courseRepo) DeleteCourse(id int) (*models.Course, error) {
