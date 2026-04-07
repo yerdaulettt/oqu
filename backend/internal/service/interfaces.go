@@ -9,3 +9,7 @@ type CourseService interface {
 	MakeCourse(c *models.Course) int
 	Delete(id int) *models.Course
 }
+
+type LessonService interface {
+	GetComments(id int) []models.Comment
+}

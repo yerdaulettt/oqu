@@ -10,17 +10,17 @@ import (
 )
 
 type courseHandler struct {
-	service service.CourseService
+	srv service.CourseService
 }
 
 func NewCourseHandler(s service.CourseService) *courseHandler {
-	return &courseHandler{service: s}
+	return &courseHandler{srv: s}
 }
 
 func (h *courseHandler) Get(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	courses := h.service.Get()
+	courses := h.srv.Get()
 	if courses == nil {
 		w.Write([]byte(`{"error":"internal server error"}`))
 		return
@@ -41,7 +41,7 @@ func (h *courseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	course := h.service.GetById(id)
+	course := h.srv.GetById(id)
 	if course == nil {
 		w.Write([]byte(`{"error": "internal server error"}`))
 		return
@@ -62,7 +62,7 @@ func (h *courseHandler) GetCourseLessons(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	lessons := h.service.GetCourseLessons(id)
+	lessons := h.srv.GetCourseLessons(id)
 	if lessons == nil {
 		w.Write([]byte(`{"error": "internal server error"}`))
 		return
@@ -84,7 +84,7 @@ func (h *courseHandler) MakeCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := h.service.MakeCourse(c)
+	id := h.srv.MakeCourse(c)
 	if id == 0 {
 		w.Write([]byte(`{"error": "internal server error"}`))
 		return
@@ -102,7 +102,7 @@ func (h *courseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := h.service.Delete(id)
+	result := h.srv.Delete(id)
 	if result == nil {
 		w.Write([]byte(`{"error": "internal server error"}`))
 		return

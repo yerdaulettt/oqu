@@ -9,3 +9,7 @@ type CourseRepository interface {
 	MakeCourse(c *models.Course) (int, error)
 	DeleteCourse(id int) (*models.Course, error)
 }
+
+type LessonRepository interface {
+	GetComments(id int) ([]models.Comment, error)
+}
