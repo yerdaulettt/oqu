@@ -5,38 +5,20 @@ import (
 	"log"
 	"net/http"
 
-	"oqu/internal/handlers"
 	"oqu/internal/middleware"
-	"oqu/internal/repository/postgresql"
-	"oqu/internal/service"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func Bastau(db *sql.DB) {
-	r := http.NewServeMux()
+	r := chi.NewRouter()
 
-	authR := postgresql.NewAuthRepo(db)
-	courseR := postgresql.NewCourseRepo(db)
-	lessonR := postgresql.NewLessonRepo(db)
+	r.Use(middleware.LogMiddleware)
 
-	authS := service.NewAuthService(authR)
-	courseS := service.NewCourseService(courseR)
-	lessonS := service.NewLessonService(lessonR)
+	r.Mount("/auth", authRouter(db))
+	r.Mount("/api/courses", courseRouter(db))
+	r.Mount("/api/lessons", lessonRouter(db))
 
-	authH := handlers.NewAuthHandler(authS)
-	courseH := handlers.NewCourseHandler(courseS)
-	lessonH := handlers.NewLessonHandler(lessonS)
-
-	r.HandleFunc("POST /register", authH.Register)
-	r.HandleFunc("POST /login", authH.Login)
-
-	r.Handle("GET /courses", middleware.JWTAuthMiddleware(http.HandlerFunc(courseH.Get))) // auth test
-	// r.HandleFunc("GET /courses", courseH.Get)
-	r.HandleFunc("GET /courses/{id}", courseH.GetById)
-	r.HandleFunc("GET /courses/{id}/lessons", courseH.GetCourseLessons)
-	r.HandleFunc("POST /courses", courseH.MakeCourse)
-	r.HandleFunc("DELETE /courses/{id}", courseH.Delete)
-
-	r.HandleFunc("GET /lessons/{id}/comments", lessonH.GetComments)
-
-	log.Fatal(http.ListenAndServe(":8080", middleware.LogMiddleware(r)))
+	log.Println("Starting server...")
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
