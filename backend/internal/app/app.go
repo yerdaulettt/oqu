@@ -7,24 +7,30 @@ import (
 
 	"oqu/internal/handlers"
 	"oqu/internal/middleware"
-	"oqu/internal/repository/postgresql/course"
-	"oqu/internal/repository/postgresql/lesson"
+	"oqu/internal/repository/postgresql"
 	"oqu/internal/service"
 )
 
 func Bastau(db *sql.DB) {
 	r := http.NewServeMux()
 
-	courseR := course.NewCourseRepo(db)
-	lessonR := lesson.NewLessonRepo(db)
+	authR := postgresql.NewAuthRepo(db)
+	courseR := postgresql.NewCourseRepo(db)
+	lessonR := postgresql.NewLessonRepo(db)
 
+	authS := service.NewAuthService(authR)
 	courseS := service.NewCourseService(courseR)
 	lessonS := service.NewLessonService(lessonR)
 
+	authH := handlers.NewAuthHandler(authS)
 	courseH := handlers.NewCourseHandler(courseS)
 	lessonH := handlers.NewLessonHandler(lessonS)
 
-	r.HandleFunc("GET /courses", courseH.Get)
+	r.HandleFunc("POST /register", authH.Register)
+	r.HandleFunc("POST /login", authH.Login)
+
+	r.Handle("GET /courses", middleware.JWTAuthMiddleware(http.HandlerFunc(courseH.Get))) // auth test
+	// r.HandleFunc("GET /courses", courseH.Get)
 	r.HandleFunc("GET /courses/{id}", courseH.GetById)
 	r.HandleFunc("GET /courses/{id}/lessons", courseH.GetCourseLessons)
 	r.HandleFunc("POST /courses", courseH.MakeCourse)

@@ -13,3 +13,8 @@ type CourseService interface {
 type LessonService interface {
 	GetComments(id int) []models.Comment
 }
+
+type AuthService interface {
+	Register(u *models.UserRegister) int
+	Login(u *models.UserLogin) string
+}

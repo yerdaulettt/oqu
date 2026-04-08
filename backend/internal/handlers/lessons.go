@@ -3,16 +3,17 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"oqu/internal/service"
 	"strconv"
+
+	"oqu/internal/service"
 )
 
 type lessonHandler struct {
-	srv service.LessonService
+	srvc service.LessonService
 }
 
 func NewLessonHandler(s service.LessonService) *lessonHandler {
-	return &lessonHandler{srv: s}
+	return &lessonHandler{srvc: s}
 }
 
 func (h *lessonHandler) GetComments(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +25,7 @@ func (h *lessonHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comments := h.srv.GetComments(id)
+	comments := h.srvc.GetComments(id)
 	if comments == nil {
 		w.Write([]byte(`{"error": "internal server error"}`))
 		return

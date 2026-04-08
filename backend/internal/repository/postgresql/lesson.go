@@ -1,4 +1,4 @@
-package lesson
+package postgresql
 
 import (
 	"database/sql"

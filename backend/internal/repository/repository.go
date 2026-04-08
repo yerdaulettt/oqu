@@ -13,3 +13,8 @@ type CourseRepository interface {
 type LessonRepository interface {
 	GetComments(id int) ([]models.Comment, error)
 }
+
+type AuthRepository interface {
+	Register(u *models.UserRegister) (int, error)
+	Login(u *models.UserLogin) (string, error)
+}
