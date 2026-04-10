@@ -10,6 +10,7 @@ type CourseService interface {
 
 type LessonService interface {
 	GetComments(id int) []models.Comment
+	PostComment(lessonId int, c *models.Comment) bool
 }
 
 type AuthService interface {

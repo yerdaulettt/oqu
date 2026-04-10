@@ -50,6 +50,7 @@ func lessonRouter(db *sql.DB) http.Handler {
 	lessonH := handlers.NewLessonHandler(lessonS)
 
 	r.HandleFunc("GET /{id}/comments", lessonH.GetComments)
+	r.HandleFunc("POST /{id}/comments", lessonH.PostComment)
 
 	return r
 }

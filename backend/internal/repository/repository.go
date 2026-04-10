@@ -10,6 +10,7 @@ type CourseRepository interface {
 
 type LessonRepository interface {
 	GetComments(id int) ([]models.Comment, error)
+	PostComment(lessonId int, c *models.Comment) (bool, error)
 }
 
 type AuthRepository interface {
