@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func authRouter(db *sql.DB) chi.Router {
+func authRouter(db *sql.DB) http.Handler {
 	r := chi.NewRouter()
 
 	authR := postgresql.NewAuthRepo(db)
@@ -25,25 +25,33 @@ func authRouter(db *sql.DB) chi.Router {
 	return r
 }
 
-func courseRouter(db *sql.DB) chi.Router {
+func courseRouter(db *sql.DB) http.Handler {
 	r := chi.NewRouter()
 
 	courseR := postgresql.NewCourseRepo(db)
 	courseS := service.NewCourseService(courseR)
 	courseH := handlers.NewCourseHandler(courseS)
 
-	r.Handle("GET /", middleware.JWTAuthMiddleware(http.HandlerFunc(courseH.Get))) // auth test
-	// r.HandleFunc("GET /courses", courseH.Get)
+	r.HandleFunc("GET /", courseH.Get)
 	r.HandleFunc("GET /{id}", courseH.GetById)
 	r.HandleFunc("GET /{id}/lessons", courseH.GetCourseLessons)
-	r.HandleFunc("POST /", courseH.MakeCourse)
-	r.HandleFunc("DELETE /{id}", courseH.Delete)
+
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.JWTAuthMiddleware)
+		r.Use(middleware.Role("admin"))
+
+		r.HandleFunc("POST /", courseH.MakeCourse)
+		r.HandleFunc("DELETE /{id}", courseH.Delete)
+	})
 
 	return r
 }
 
-func lessonRouter(db *sql.DB) chi.Router {
+func lessonRouter(db *sql.DB) http.Handler {
 	r := chi.NewRouter()
+
+	r.Use(middleware.JWTAuthMiddleware)
+	r.Use(middleware.Role("admin", "user"))
 
 	lessonR := postgresql.NewLessonRepo(db)
 	lessonS := service.NewLessonService(lessonR)

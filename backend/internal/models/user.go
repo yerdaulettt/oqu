@@ -21,4 +21,5 @@ type UserLogin struct {
 type UserResponseDB struct {
 	Username     string
 	PasswordHash string
+	Role         string
 }

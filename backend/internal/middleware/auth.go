@@ -3,8 +3,10 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -44,14 +46,30 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		username, ok := claims["username"].(string)
+		role, ok := claims["role"].(string)
 		if !ok {
 			unauthResponse(w, "incorrect claim")
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "username", username)
+		ctx := context.WithValue(r.Context(), "role", role)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func Role(requiredRoles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			role := r.Context().Value("role").(string)
+
+			if !slices.Contains(requiredRoles, role) {
+				response := fmt.Sprintf("Only [%s] can access! Your role is [%s]", strings.Join(requiredRoles, ", "), role)
+				unauthResponse(w, response)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
