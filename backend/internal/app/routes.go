@@ -36,14 +36,6 @@ func courseRouter(db *sql.DB) http.Handler {
 	r.HandleFunc("GET /{id}", courseH.GetById)
 	r.HandleFunc("GET /{id}/lessons", courseH.GetCourseLessons)
 
-	r.Group(func(r chi.Router) {
-		r.Use(middleware.JWTAuthMiddleware)
-		r.Use(middleware.Role("admin"))
-
-		r.HandleFunc("POST /", courseH.MakeCourse)
-		r.HandleFunc("DELETE /{id}", courseH.Delete)
-	})
-
 	return r
 }
 
@@ -73,6 +65,8 @@ func adminRouter(db *sql.DB) http.Handler {
 	adminH := handlers.NewAdminHandler(adminS)
 
 	r.HandleFunc("GET /users", adminH.GetUsers)
+	r.HandleFunc("POST /courses", adminH.MakeCourse)
+	r.HandleFunc("DELETE /courses/{id}", adminH.Delete)
 
 	return r
 }

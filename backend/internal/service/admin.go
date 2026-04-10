@@ -22,3 +22,23 @@ func (s *adminService) GetUsers() []models.User {
 	}
 	return users
 }
+
+func (s *adminService) MakeCourse(c *models.Course) int {
+	id, err := s.repo.MakeCourse(c)
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+
+	return id
+}
+
+func (s *adminService) Delete(id int) *models.Course {
+	result, err := s.repo.DeleteCourse(id)
+	if err != nil {
+		log.Println("course service error:", err)
+		return nil
+	}
+
+	return result
+}

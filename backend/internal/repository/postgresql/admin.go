@@ -33,3 +33,25 @@ func (r *adminRepo) GetUsers() ([]models.User, error) {
 
 	return users, nil
 }
+
+func (r *adminRepo) MakeCourse(c *models.Course) (int, error) {
+	var id int
+	query := `insert into courses values(default, $1, $2) returning id`
+	err := r.db.QueryRow(query, c.Name, c.Description).Scan(&id)
+	if err != nil {
+		return id, err
+	}
+
+	return id, nil
+}
+
+func (r *adminRepo) DeleteCourse(id int) (*models.Course, error) {
+	var deleted models.Course
+	query := `delete from courses where id = $1 returning *`
+	err := r.db.QueryRow(query, id).Scan(&deleted.Id, &deleted.Name, &deleted.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	return &deleted, nil
+}
