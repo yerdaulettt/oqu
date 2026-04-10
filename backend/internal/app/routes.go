@@ -61,3 +61,18 @@ func lessonRouter(db *sql.DB) http.Handler {
 
 	return r
 }
+
+func adminRouter(db *sql.DB) http.Handler {
+	r := chi.NewRouter()
+
+	r.Use(middleware.JWTAuthMiddleware)
+	r.Use(middleware.Role("admin"))
+
+	adminR := postgresql.NewAdminRepo(db)
+	adminS := service.NewAdminService(adminR)
+	adminH := handlers.NewAdminHandler(adminS)
+
+	r.HandleFunc("GET /users", adminH.GetUsers)
+
+	return r
+}

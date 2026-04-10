@@ -18,3 +18,7 @@ type AuthRepository interface {
 	Register(u *models.UserRegister) (int, error)
 	Login(u *models.UserLogin) (string, error)
 }
+
+type AdminRepository interface {
+	GetUsers() ([]models.User, error)
+}

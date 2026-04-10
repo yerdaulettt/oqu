@@ -18,3 +18,7 @@ type AuthService interface {
 	Register(u *models.UserRegister) int
 	Login(u *models.UserLogin) string
 }
+
+type AdminService interface {
+	GetUsers() []models.User
+}
