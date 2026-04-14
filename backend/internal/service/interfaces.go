@@ -6,6 +6,7 @@ type CourseService interface {
 	Get() []models.Course
 	GetById(id int) *models.Course
 	GetCourseLessons(id int) []models.Lesson
+	EnrollInClass(classId int, userId int) error
 }
 
 type LessonService interface {
@@ -27,4 +28,9 @@ type AdminService interface {
 type ModeratorService interface {
 	ViewComments() ([]models.ModeratorCommentView, error)
 	DeleteComment(id int) (*models.Comment, error)
+}
+
+type UserService interface {
+	GetProfileInfo(userId int) (*models.User, error)
+	GetMyClasses(userId int) ([]models.Course, error)
 }

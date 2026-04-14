@@ -43,3 +43,7 @@ func (s *courseService) GetCourseLessons(id int) []models.Lesson {
 
 	return lessons
 }
+
+func (s *courseService) EnrollInClass(classId int, userId int) error {
+	return s.repo.EnrollInClass(classId, userId)
+}

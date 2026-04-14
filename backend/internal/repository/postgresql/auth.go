@@ -37,8 +37,8 @@ func (r *authRepo) Register(u *models.UserRegister) (int, error) {
 func (r *authRepo) Login(u *models.UserLogin) (string, error) {
 	var userFromDB models.UserResponseDB
 
-	query := `select username, password, role from users where username = $1`
-	err := r.db.QueryRow(query, u.Username).Scan(&userFromDB.Username, &userFromDB.PasswordHash, &userFromDB.Role)
+	query := `select id, username, password, role from users where username = $1`
+	err := r.db.QueryRow(query, u.Username).Scan(&userFromDB.Id, &userFromDB.Username, &userFromDB.PasswordHash, &userFromDB.Role)
 	if err != nil {
 		return "", err
 	}
@@ -49,6 +49,7 @@ func (r *authRepo) Login(u *models.UserLogin) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": userFromDB.Username,
+		"userId":   userFromDB.Id,
 		"role":     userFromDB.Role,
 		"exp":      8 * time.Hour,
 	})

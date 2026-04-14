@@ -35,6 +35,7 @@ func courseRouter(db *sql.DB) http.Handler {
 	r.HandleFunc("GET /", courseH.Get)
 	r.HandleFunc("GET /{id}", courseH.GetById)
 	r.HandleFunc("GET /{id}/lessons", courseH.GetCourseLessons)
+	r.With(middleware.JWTAuthMiddleware).HandleFunc("POST /{id}/enroll", courseH.EnrollInClass)
 
 	return r
 }
@@ -84,6 +85,21 @@ func moderatorRouter(db *sql.DB) http.Handler {
 
 	r.HandleFunc("GET /comments", moderatorH.ViewComments)
 	r.HandleFunc("DELETE /comments/{id}", moderatorH.DeleteComment)
+
+	return r
+}
+
+func userRouter(db *sql.DB) http.Handler {
+	r := chi.NewRouter()
+
+	r.Use(middleware.JWTAuthMiddleware)
+
+	userR := postgresql.NewUserRepo(db)
+	userS := service.NewUserService(userR)
+	userH := handlers.NewUserHandler(userS)
+
+	r.HandleFunc("GET /profile", userH.GetProfileInfo)
+	r.HandleFunc("GET /enrollments", userH.GetMyClasses)
 
 	return r
 }

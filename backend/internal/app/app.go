@@ -18,6 +18,7 @@ func Bastau(db *sql.DB) {
 	r.Mount("/auth", authRouter(db))
 	r.Mount("/admin", adminRouter(db))
 	r.Mount("/moderator", moderatorRouter(db))
+	r.Mount("/api/users", userRouter(db))
 	r.Mount("/api/courses", courseRouter(db))
 	r.Mount("/api/lessons", lessonRouter(db))
 

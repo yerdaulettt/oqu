@@ -6,6 +6,7 @@ type CourseRepository interface {
 	GetCourses() ([]models.Course, error)
 	GetCourseById(id int) (*models.Course, error)
 	GetCourseLessons(id int) ([]models.Lesson, error)
+	EnrollInClass(classId int, userId int) error
 }
 
 type LessonRepository interface {
@@ -27,4 +28,9 @@ type AdminRepository interface {
 type ModeratorRepository interface {
 	ViewComments() ([]models.ModeratorCommentView, error)
 	DeleteComment(id int) (*models.Comment, error)
+}
+
+type UserRepository interface {
+	GetProfileInfo(userId int) (*models.User, error)
+	GetMyClasses(userId int) ([]models.Course, error)
 }

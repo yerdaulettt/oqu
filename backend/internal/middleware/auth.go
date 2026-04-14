@@ -51,8 +51,10 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 			unauthResponse(w, "incorrect claim")
 			return
 		}
+		userId := int(claims["userId"].(float64))
 
 		ctx := context.WithValue(r.Context(), "role", role)
+		ctx = context.WithValue(ctx, "userId", userId)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
