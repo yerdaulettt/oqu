@@ -23,3 +23,8 @@ type AdminService interface {
 	MakeCourse(c *models.Course) int
 	Delete(id int) *models.Course
 }
+
+type ModeratorService interface {
+	ViewComments() ([]models.ModeratorCommentView, error)
+	DeleteComment(id int) (*models.Comment, error)
+}

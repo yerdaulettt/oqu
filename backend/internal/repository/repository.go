@@ -23,3 +23,8 @@ type AdminRepository interface {
 	MakeCourse(c *models.Course) (int, error)
 	DeleteCourse(id int) (*models.Course, error)
 }
+
+type ModeratorRepository interface {
+	ViewComments() ([]models.ModeratorCommentView, error)
+	DeleteComment(id int) (*models.Comment, error)
+}

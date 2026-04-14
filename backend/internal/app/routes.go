@@ -71,3 +71,19 @@ func adminRouter(db *sql.DB) http.Handler {
 
 	return r
 }
+
+func moderatorRouter(db *sql.DB) http.Handler {
+	r := chi.NewRouter()
+
+	r.Use(middleware.JWTAuthMiddleware)
+	r.Use(middleware.Role("moderator"))
+
+	moderatorR := postgresql.NewModeratorRepo(db)
+	moderatorS := service.NewModeratorService(moderatorR)
+	moderatorH := handlers.NewModeratorHandler(moderatorS)
+
+	r.HandleFunc("GET /comments", moderatorH.ViewComments)
+	r.HandleFunc("DELETE /comments/{id}", moderatorH.DeleteComment)
+
+	return r
+}
