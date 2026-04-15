@@ -32,3 +32,7 @@ func (s *lessonService) PostComment(lessonId int, userId int, c *models.Comment)
 	}
 	return ok
 }
+
+func (s *lessonService) Score(lessonId, score, userId int) error {
+	return s.repo.Score(lessonId, score, userId)
+}

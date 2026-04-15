@@ -12,6 +12,7 @@ type CourseRepository interface {
 type LessonRepository interface {
 	GetComments(id int) ([]models.Comment, error)
 	PostComment(lessonId int, userId int, c *models.Comment) (bool, error)
+	Score(lessonId, score, userId int) error
 }
 
 type CommentRepository interface {
@@ -37,4 +38,5 @@ type ModeratorRepository interface {
 type UserRepository interface {
 	GetProfileInfo(userId int) (*models.User, error)
 	GetMyClasses(userId int) ([]models.Course, error)
+	GetAllCoursesRating(userId int) ([]models.Rating, error)
 }

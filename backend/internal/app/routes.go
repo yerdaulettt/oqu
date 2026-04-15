@@ -52,6 +52,7 @@ func lessonRouter(db *sql.DB) http.Handler {
 
 	r.HandleFunc("GET /{id}/comments", lessonH.GetComments)
 	r.HandleFunc("POST /{id}/comments", lessonH.PostComment)
+	r.HandleFunc("POST /{id}/score", lessonH.Score)
 
 	return r
 }
@@ -114,6 +115,7 @@ func userRouter(db *sql.DB) http.Handler {
 
 	r.HandleFunc("GET /profile", userH.GetProfileInfo)
 	r.HandleFunc("GET /enrollments", userH.GetMyClasses)
+	r.HandleFunc("GET /rating", userH.GetAllCoursesRating)
 
 	return r
 }

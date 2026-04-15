@@ -55,3 +55,24 @@ func (h *userHandler) GetMyClasses(w http.ResponseWriter, r *http.Request) {
 		jsonResponse(w, http.StatusInternalServerError, err.Error())
 	}
 }
+
+func (h *userHandler) GetAllCoursesRating(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "jwt claim error")
+		return
+	}
+
+	ratings, err := h.srvc.GetAllCoursesRating(userId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&ratings)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+	}
+}

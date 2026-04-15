@@ -20,3 +20,7 @@ func (s *userService) GetProfileInfo(userId int) (*models.User, error) {
 func (s *userService) GetMyClasses(userId int) ([]models.Course, error) {
 	return s.repo.GetMyClasses(userId)
 }
+
+func (s *userService) GetAllCoursesRating(userId int) ([]models.Rating, error) {
+	return s.repo.GetAllCoursesRating(userId)
+}

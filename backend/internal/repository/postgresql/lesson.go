@@ -50,3 +50,19 @@ func (r *lessonRepo) PostComment(lessonId int, userId int, c *models.Comment) (b
 
 	return true, nil
 }
+
+func (r *lessonRepo) Score(lessonId, score, userId int) error {
+	var courseId int
+	err := r.db.QueryRow("select course_id from lessons where id = $1", lessonId).Scan(&courseId)
+	if err != nil {
+		return err
+	}
+
+	query := `insert into rating (course_id, lesson_id, lesson_score, user_id) values ($1, $2, $3, $4)`
+	_, err = r.db.Exec(query, courseId, lessonId, score, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

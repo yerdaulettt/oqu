@@ -12,6 +12,7 @@ type CourseService interface {
 type LessonService interface {
 	GetComments(id int) []models.Comment
 	PostComment(lessonId int, userId int, c *models.Comment) bool
+	Score(lessonId, score, userId int) error
 }
 
 type CommentService interface {
@@ -37,4 +38,5 @@ type ModeratorService interface {
 type UserService interface {
 	GetProfileInfo(userId int) (*models.User, error)
 	GetMyClasses(userId int) ([]models.Course, error)
+	GetAllCoursesRating(userId int) ([]models.Rating, error)
 }
