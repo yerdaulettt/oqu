@@ -1,8 +1,10 @@
 package models
 
 type Comment struct {
-	Id      int    `json:"id"`
-	Content string `json:"content"`
+	Id       int    `json:"id"`
+	Content  string `json:"content"`
+	Username string `json:"username"`
+	Votes    int    `json:"votes"`
 }
 
 type ModeratorCommentView struct {

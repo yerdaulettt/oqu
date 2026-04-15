@@ -56,6 +56,20 @@ func lessonRouter(db *sql.DB) http.Handler {
 	return r
 }
 
+func commentRouter(db *sql.DB) http.Handler {
+	r := chi.NewRouter()
+
+	r.Use(middleware.JWTAuthMiddleware)
+
+	commentR := postgresql.NewCommentRepo(db)
+	commentS := service.NewCommentService(commentR)
+	commentH := handlers.NewCommentHandler(commentS)
+
+	r.HandleFunc("POST /{id}/vote", commentH.Vote)
+
+	return r
+}
+
 func adminRouter(db *sql.DB) http.Handler {
 	r := chi.NewRouter()
 

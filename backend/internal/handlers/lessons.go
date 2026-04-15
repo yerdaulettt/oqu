@@ -54,7 +54,13 @@ func (h *lessonHandler) PostComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok := h.srvc.PostComment(lessonId, &c)
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "error jwt claim")
+		return
+	}
+
+	ok = h.srvc.PostComment(lessonId, userId, &c)
 	if !ok {
 		w.Write([]byte(`{"error": "comment not posted"}`))
 		return

@@ -11,7 +11,11 @@ type CourseService interface {
 
 type LessonService interface {
 	GetComments(id int) []models.Comment
-	PostComment(lessonId int, c *models.Comment) bool
+	PostComment(lessonId int, userId int, c *models.Comment) bool
+}
+
+type CommentService interface {
+	Vote(commentId int) error
 }
 
 type AuthService interface {

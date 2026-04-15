@@ -21,6 +21,7 @@ func Bastau(db *sql.DB) {
 	r.Mount("/api/users", userRouter(db))
 	r.Mount("/api/courses", courseRouter(db))
 	r.Mount("/api/lessons", lessonRouter(db))
+	r.Mount("/api/comments", commentRouter(db))
 
 	log.Println("Starting server...")
 	log.Fatal(http.ListenAndServe(":8080", r))

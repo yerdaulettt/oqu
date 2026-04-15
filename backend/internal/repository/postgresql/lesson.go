@@ -18,7 +18,10 @@ func NewLessonRepo(db *sql.DB) *lessonRepo {
 func (r *lessonRepo) GetComments(id int) ([]models.Comment, error) {
 	var comments []models.Comment
 
-	query := `select c.id, c.content from lessons as l join comments as c on l.id = c.lesson_id where l.id = $1`
+	query := `select c.id, c.content, u.username, c.votes from
+	(lessons as l join comments as c on l.id = c.lesson_id)
+	join users as u on c.user_id = u.id where l.id = $1`
+
 	rows, err := r.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -27,7 +30,7 @@ func (r *lessonRepo) GetComments(id int) ([]models.Comment, error) {
 
 	for rows.Next() {
 		var c models.Comment
-		err := rows.Scan(&c.Id, &c.Content)
+		err := rows.Scan(&c.Id, &c.Content, &c.Username, &c.Votes)
 		if err != nil {
 			return nil, err
 		}
@@ -37,10 +40,10 @@ func (r *lessonRepo) GetComments(id int) ([]models.Comment, error) {
 	return comments, nil
 }
 
-func (r *lessonRepo) PostComment(lessonId int, c *models.Comment) (bool, error) {
-	query := `insert into comments (content, lesson_id) values ($1, $2)`
+func (r *lessonRepo) PostComment(lessonId int, userId int, c *models.Comment) (bool, error) {
+	query := `insert into comments (content, lesson_id, user_id) values ($1, $2, $3)`
 
-	if res, err := r.db.Exec(query, c.Content, lessonId); err != nil {
+	if res, err := r.db.Exec(query, c.Content, lessonId, userId); err != nil {
 		log.Println(res)
 		return false, err
 	}
