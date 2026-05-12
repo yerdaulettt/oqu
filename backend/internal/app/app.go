@@ -8,9 +8,10 @@ import (
 	"oqu/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/redis/go-redis/v9"
 )
 
-func Bastau(db *sql.DB) {
+func Bastau(db *sql.DB, cache *redis.Client) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.LogMiddleware)
@@ -18,7 +19,7 @@ func Bastau(db *sql.DB) {
 	r.Mount("/auth", authRouter(db))
 	r.Mount("/admin", adminRouter(db))
 	r.Mount("/moderator", moderatorRouter(db))
-	r.Mount("/api/users", userRouter(db))
+	r.Mount("/api/users", userRouter(db, cache))
 	r.Mount("/api/courses", courseRouter(db))
 	r.Mount("/api/lessons", lessonRouter(db))
 	r.Mount("/api/comments", commentRouter(db))

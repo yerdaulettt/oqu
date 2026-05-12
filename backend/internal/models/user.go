@@ -1,10 +1,10 @@
 package models
 
 type User struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	Id       int    `json:"id" redis:"id"`
+	Name     string `json:"name" redis:"name"`
+	Username string `json:"username" redis:"username"`
+	Role     string `json:"role" redis:"role"`
 }
 
 type UserRegister struct {

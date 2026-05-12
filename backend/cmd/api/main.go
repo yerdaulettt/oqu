@@ -4,8 +4,10 @@ import (
 	"oqu/internal/app"
 	"oqu/internal/configs"
 	"oqu/internal/repository/postgresql"
+	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -17,5 +19,13 @@ func main() {
 	db := postgresql.NewPostgresqlConn(cfg)
 	defer db.Close()
 
-	app.Bastau(db)
+	cache := redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_URL"),
+		Password: "",
+		DB:       0,
+		Protocol: 2,
+	})
+	defer cache.Close()
+
+	app.Bastau(db, cache)
 }

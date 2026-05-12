@@ -10,6 +10,7 @@ import (
 	"oqu/internal/service"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/redis/go-redis/v9"
 )
 
 func authRouter(db *sql.DB) http.Handler {
@@ -104,13 +105,13 @@ func moderatorRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func userRouter(db *sql.DB) http.Handler {
+func userRouter(db *sql.DB, cache *redis.Client) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.JWTAuthMiddleware)
 
 	userR := postgresql.NewUserRepo(db)
-	userS := service.NewUserService(userR)
+	userS := service.NewUserService(userR, cache)
 	userH := handlers.NewUserHandler(userS)
 
 	r.HandleFunc("GET /profile", userH.GetProfileInfo)
