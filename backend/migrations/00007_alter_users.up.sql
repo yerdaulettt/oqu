@@ -1,0 +1,1 @@
+alter table users alter column name set default 'Name';

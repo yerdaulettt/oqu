@@ -39,6 +39,12 @@ services:
       - "8081:80"
     depends_on:
       - backend
+  
+  cache:
+    image: redis:8.6-alpine
+    container_name: cache
+    ports:
+      - "6380:6379"
 
 volumes:
   pgtestdata:
