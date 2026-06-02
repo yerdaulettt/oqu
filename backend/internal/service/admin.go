@@ -42,3 +42,14 @@ func (s *adminService) Delete(id int) *models.Course {
 
 	return result
 }
+
+func (s *adminService) AddLesson(courseId int, l *models.Lesson) (int, error) {
+	id, err := s.repo.AddLesson(courseId, l)
+
+	if err != nil {
+		log.Println("Admin service AddLesson():", err)
+		return id, internalErr
+	}
+
+	return id, nil
+}

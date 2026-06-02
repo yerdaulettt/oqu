@@ -68,6 +68,7 @@ func commentRouter(db *sql.DB) http.Handler {
 	commentH := handlers.NewCommentHandler(commentS)
 
 	r.HandleFunc("POST /{id}/vote", commentH.Vote)
+	r.HandleFunc("PATCH /{id}/vote", commentH.ModifyVote)
 
 	return r
 }
@@ -85,6 +86,7 @@ func adminRouter(db *sql.DB) http.Handler {
 	r.HandleFunc("GET /users", adminH.GetUsers)
 	r.HandleFunc("POST /courses", adminH.MakeCourse)
 	r.HandleFunc("DELETE /courses/{id}", adminH.Delete)
+	r.HandleFunc("POST /courses/{id}/lessons", adminH.AddLesson)
 
 	return r
 }

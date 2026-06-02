@@ -18,9 +18,9 @@ func NewLessonRepo(db *sql.DB) *lessonRepo {
 func (r *lessonRepo) GetComments(id int) ([]models.Comment, error) {
 	var comments []models.Comment
 
-	query := `select c.id, c.content, u.username, c.votes from
-	(lessons as l join comments as c on l.id = c.lesson_id)
-	join users as u on c.user_id = u.id where l.id = $1`
+	query := `select c.id, c.content, count(voted) from
+	comments as c left join comment_votes as v on c.id = v.comment_id
+	where lesson_id = $1 group by c.id`
 
 	rows, err := r.db.Query(query, id)
 	if err != nil {
@@ -30,7 +30,7 @@ func (r *lessonRepo) GetComments(id int) ([]models.Comment, error) {
 
 	for rows.Next() {
 		var c models.Comment
-		err := rows.Scan(&c.Id, &c.Content, &c.Username, &c.Votes)
+		err := rows.Scan(&c.Id, &c.Content, &c.Votes)
 		if err != nil {
 			return nil, err
 		}

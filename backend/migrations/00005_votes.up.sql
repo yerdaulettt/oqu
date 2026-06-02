@@ -1,1 +1,0 @@
-alter table comments add column votes int default 0, add column user_id int references users(id);

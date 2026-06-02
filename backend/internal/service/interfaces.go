@@ -3,8 +3,8 @@ package service
 import "oqu/internal/models"
 
 type CourseService interface {
-	Get() []models.Course
-	GetById(id int) *models.Course
+	Get() ([]models.Course, error)
+	GetById(id int) (*models.Course, error)
 	GetCourseLessons(id int) []models.Lesson
 	EnrollInClass(classId int, userId int) error
 }
@@ -16,7 +16,8 @@ type LessonService interface {
 }
 
 type CommentService interface {
-	Vote(commentId int) error
+	Vote(userId, commentId int) error
+	ModifyVote(userId, commentId int) error
 }
 
 type AuthService interface {
@@ -28,6 +29,7 @@ type AdminService interface {
 	GetUsers() []models.User
 	MakeCourse(c *models.Course) int
 	Delete(id int) *models.Course
+	AddLesson(courseId int, l *models.Lesson) (int, error)
 }
 
 type ModeratorService interface {

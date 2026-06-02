@@ -16,7 +16,8 @@ type LessonRepository interface {
 }
 
 type CommentRepository interface {
-	Vote(commentId int) error
+	Vote(userId, commentId int) error
+	ModifyVote(userId, commentId int) error
 }
 
 type AuthRepository interface {
@@ -28,6 +29,7 @@ type AdminRepository interface {
 	GetUsers() ([]models.User, error)
 	MakeCourse(c *models.Course) (int, error)
 	DeleteCourse(id int) (*models.Course, error)
+	AddLesson(courseId int, l *models.Lesson) (int, error)
 }
 
 type ModeratorRepository interface {

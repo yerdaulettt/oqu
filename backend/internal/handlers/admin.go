@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"oqu/internal/models"
 	"oqu/internal/service"
@@ -69,4 +70,30 @@ func (h *adminHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
 	}
+}
+
+func (h *adminHandler) AddLesson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	courseId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		w.Write([]byte(`{"error": "provide number"}`))
+		return
+	}
+
+	var l *models.Lesson
+	err = json.NewDecoder(r.Body).Decode(&l)
+	if err != nil {
+		log.Println(err)
+		w.Write([]byte(`{"error": "json error"}`))
+		return
+	}
+
+	id, err := h.srvc.AddLesson(courseId, l)
+	if err != nil {
+		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
+		return
+	}
+
+	w.Write([]byte(`{"msg": "lesson with id ` + strconv.Itoa(id) + `"}`))
 }

@@ -1,7 +1,10 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
 	"log"
+
 	"oqu/internal/models"
 	"oqu/internal/repository"
 )
@@ -14,24 +17,32 @@ func NewCourseService(r repository.CourseRepository) *courseService {
 	return &courseService{repo: r}
 }
 
-func (s *courseService) Get() []models.Course {
+func (s *courseService) Get() ([]models.Course, error) {
 	courses, err := s.repo.GetCourses()
-	if err != nil {
-		log.Println("course service error:", err)
-		return nil
+
+	if errors.Is(err, sql.ErrNoRows) {
+		log.Println("Course service Get():", err)
+		return nil, notFoundErr
+	} else if err != nil {
+		log.Println("Course service Get():", err)
+		return nil, internalErr
 	}
 
-	return courses
+	return courses, nil
 }
 
-func (s *courseService) GetById(id int) *models.Course {
+func (s *courseService) GetById(id int) (*models.Course, error) {
 	course, err := s.repo.GetCourseById(id)
-	if err != nil {
-		log.Println("course service error:", err)
-		return nil
+
+	if errors.Is(err, sql.ErrNoRows) {
+		log.Println("Course service GetById():", err)
+		return nil, notFoundErr
+	} else if err != nil {
+		log.Println("Course service GetById():", err)
+		return nil, internalErr
 	}
 
-	return course
+	return course, nil
 }
 
 func (s *courseService) GetCourseLessons(id int) []models.Lesson {

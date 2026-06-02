@@ -19,13 +19,13 @@ func NewCourseHandler(s service.CourseService) *courseHandler {
 func (h *courseHandler) Get(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	courses := h.srvc.Get()
-	if courses == nil {
-		w.Write([]byte(`{"error":"internal server error"}`))
+	courses, err := h.srvc.Get()
+	if err != nil {
+		w.Write([]byte(`{"error":"` + err.Error() + `"}`))
 		return
 	}
 
-	err := json.NewEncoder(w).Encode(&courses)
+	err = json.NewEncoder(w).Encode(&courses)
 	if err != nil {
 		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
 	}
@@ -40,9 +40,9 @@ func (h *courseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	course := h.srvc.GetById(id)
-	if course == nil {
-		w.Write([]byte(`{"error": "internal server error"}`))
+	course, err := h.srvc.GetById(id)
+	if err != nil {
+		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
 		return
 	}
 

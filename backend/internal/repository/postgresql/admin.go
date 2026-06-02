@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"database/sql"
+
 	"oqu/internal/models"
 )
 
@@ -47,6 +48,7 @@ func (r *adminRepo) MakeCourse(c *models.Course) (int, error) {
 
 func (r *adminRepo) DeleteCourse(id int) (*models.Course, error) {
 	var deleted models.Course
+
 	query := `delete from courses where id = $1 returning *`
 	err := r.db.QueryRow(query, id).Scan(&deleted.Id, &deleted.Name, &deleted.Description)
 	if err != nil {
@@ -54,4 +56,16 @@ func (r *adminRepo) DeleteCourse(id int) (*models.Course, error) {
 	}
 
 	return &deleted, nil
+}
+
+func (r *adminRepo) AddLesson(courseId int, l *models.Lesson) (int, error) {
+	var id int
+
+	query := `insert into lessons (name, content, course_id) values ($1, $2, $3) returning id`
+	err := r.db.QueryRow(query, l.Name, l.Content, courseId).Scan(&id)
+	if err != nil {
+		return id, err
+	}
+
+	return id, nil
 }
