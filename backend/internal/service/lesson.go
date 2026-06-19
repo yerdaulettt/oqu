@@ -14,6 +14,19 @@ func NewLessonService(r repository.LessonRepository) *lessonService {
 	return &lessonService{repo: r}
 }
 
+func (s *lessonService) GetLesson(id int) (*models.LessonDetail, error) {
+	lesson, err := s.repo.GetLesson(id)
+
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	} else if lesson == nil {
+		return nil, notFoundErr
+	}
+
+	return lesson, nil
+}
+
 func (s *lessonService) GetComments(id int) []models.Comment {
 	comments, err := s.repo.GetComments(id)
 	if err != nil {
@@ -33,6 +46,16 @@ func (s *lessonService) PostComment(lessonId int, userId int, c *models.Comment)
 	return ok
 }
 
-func (s *lessonService) Score(lessonId, score, userId int) error {
-	return s.repo.Score(lessonId, score, userId)
+func (s *lessonService) Score(lessonId, userId int) error {
+	return s.repo.Score(lessonId, userId)
+}
+
+func (s *lessonService) ResetScore(lessonId, userId int) error {
+	err := s.repo.ResetScore(lessonId, userId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	return nil
 }

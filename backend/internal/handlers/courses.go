@@ -61,9 +61,9 @@ func (h *courseHandler) GetCourseLessons(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	lessons := h.srvc.GetCourseLessons(id)
-	if lessons == nil {
-		w.Write([]byte(`{"error": "internal server error"}`))
+	lessons, err := h.srvc.GetCourseLessons(id)
+	if err != nil {
+		jsonResponse(w, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -95,4 +95,28 @@ func (h *courseHandler) EnrollInClass(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, http.StatusOK, "Successfully enrolled!")
+}
+
+func (h *courseHandler) ResetRating(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	courseId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "Incorrect token")
+		return
+	}
+
+	err = h.srvc.ResetRating(courseId, userId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Write([]byte(`{"message": "Course rating reset"}`))
 }

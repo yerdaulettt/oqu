@@ -37,6 +37,7 @@ func courseRouter(db *sql.DB) http.Handler {
 	r.HandleFunc("GET /{id}", courseH.GetById)
 	r.HandleFunc("GET /{id}/lessons", courseH.GetCourseLessons)
 	r.With(middleware.JWTAuthMiddleware).HandleFunc("POST /{id}/enroll", courseH.EnrollInClass)
+	r.With(middleware.JWTAuthMiddleware).HandleFunc("POST /{id}/reset", courseH.ResetRating)
 
 	return r
 }
@@ -51,9 +52,11 @@ func lessonRouter(db *sql.DB) http.Handler {
 	lessonS := service.NewLessonService(lessonR)
 	lessonH := handlers.NewLessonHandler(lessonS)
 
+	r.HandleFunc("GET /{id}", lessonH.GetLessonById)
 	r.HandleFunc("GET /{id}/comments", lessonH.GetComments)
 	r.HandleFunc("POST /{id}/comments", lessonH.PostComment)
 	r.HandleFunc("POST /{id}/score", lessonH.Score)
+	r.HandleFunc("POST /{id}/reset", lessonH.ResetScore)
 
 	return r
 }

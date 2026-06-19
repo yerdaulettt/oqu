@@ -17,6 +17,28 @@ func NewLessonHandler(s service.LessonService) *lessonHandler {
 	return &lessonHandler{srvc: s}
 }
 
+func (h *lessonHandler) GetLessonById(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	lesson, err := h.srvc.GetLesson(id)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&lesson)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+}
+
 func (h *lessonHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -84,11 +106,35 @@ func (h *lessonHandler) Score(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := h.srvc.Score(lessonId, 1, userId)
+	response := h.srvc.Score(lessonId, userId)
 	if response != nil {
 		jsonResponse(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	w.Write([]byte(`{"msg": "scored ok"}`))
+}
+
+func (h *lessonHandler) ResetScore(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "Incorrect token")
+		return
+	}
+
+	err = h.srvc.ResetScore(lessonId, userId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Write([]byte(`{"message": "Score reset ok"}`))
 }

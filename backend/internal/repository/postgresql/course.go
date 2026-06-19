@@ -77,3 +77,14 @@ func (r *courseRepo) EnrollInClass(classId int, userId int) error {
 	}
 	return nil
 }
+
+func (r *courseRepo) ResetRating(courseId, userId int) error {
+	query := `delete from rating where course_id = $1 and user_id = $2`
+
+	_, err := r.db.Exec(query, courseId, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

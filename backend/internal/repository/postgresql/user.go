@@ -67,8 +67,8 @@ func (r *userRepo) getCourseDetails(id int) (string, int, error) {
 func (r *userRepo) GetAllCoursesRating(userId int) ([]models.Rating, error) {
 	var ratings []models.Rating
 
-	query := `select e.course_id, sum(r.lesson_score) as total from
-	enrollments as e join rating as r on e.course_id = r.course_id where e.user_id = $1 group by e.course_id;`
+	query := `select e.course_id, sum(completed::integer) as rating from
+	rating as r join enrollments as e on r.course_id = e.course_id where e.user_id = $1 group by e.course_id`
 
 	rows, err := r.db.Query(query, userId)
 	if err != nil {

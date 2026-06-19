@@ -45,16 +45,34 @@ func (s *courseService) GetById(id int) (*models.Course, error) {
 	return course, nil
 }
 
-func (s *courseService) GetCourseLessons(id int) []models.Lesson {
+func (s *courseService) GetCourseLessons(id int) ([]models.Lesson, error) {
 	lessons, err := s.repo.GetCourseLessons(id)
+
 	if err != nil {
 		log.Println(err)
-		return nil
+		return nil, internalErr
+	} else if lessons == nil {
+		return nil, notFoundErr
 	}
 
-	return lessons
+	return lessons, nil
 }
 
 func (s *courseService) EnrollInClass(classId int, userId int) error {
-	return s.repo.EnrollInClass(classId, userId)
+	err := s.repo.EnrollInClass(classId, userId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+	return nil
+}
+
+func (s *courseService) ResetRating(courseId, userId int) error {
+	err := s.repo.ResetRating(courseId, userId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	return nil
 }
