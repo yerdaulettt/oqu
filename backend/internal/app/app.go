@@ -20,8 +20,8 @@ func Bastau(db *sql.DB, cache *redis.Client) {
 	r.Mount("/admin", adminRouter(db))
 	r.Mount("/moderator", moderatorRouter(db))
 	r.Mount("/api/users", userRouter(db, cache))
-	r.Mount("/api/courses", courseRouter(db))
-	r.Mount("/api/lessons", lessonRouter(db))
+	r.Mount("/api/courses", courseRouter(db, cache))
+	r.Mount("/api/lessons", lessonRouter(db, cache))
 	r.Mount("/api/comments", commentRouter(db))
 
 	log.Println("Starting server...")

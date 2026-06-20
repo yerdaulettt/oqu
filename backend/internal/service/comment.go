@@ -2,6 +2,7 @@ package service
 
 import (
 	"log"
+
 	"oqu/internal/repository"
 )
 
@@ -14,7 +15,13 @@ func NewCommentService(r repository.CommentRepository) *commentService {
 }
 
 func (s *commentService) Vote(userId, commentId int) error {
-	return s.repo.Vote(userId, commentId)
+	err := s.repo.Vote(userId, commentId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	return nil
 }
 
 func (s *commentService) ModifyVote(userId, commentId int) error {

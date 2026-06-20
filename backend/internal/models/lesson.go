@@ -12,11 +12,11 @@ type Lesson struct {
 }
 
 type LessonDetail struct {
-	Id         int    `json:"id"`
-	Name       string `json:"name"`
-	Content    string `json:"content"`
-	CourseName string `json:"course_name"`
-	CourseId   int    `json:"course_id"`
+	Id         int    `json:"id" redis:"id"`
+	Name       string `json:"name" redis:"name"`
+	Content    string `json:"content" redis:"content"`
+	CourseName string `json:"course_name" redis:"course_name"`
+	CourseId   int    `json:"course_id" redis:"course_id"`
 }
 
 type Answer struct {
@@ -37,9 +37,9 @@ type NewTest struct {
 }
 
 type LessonTest struct {
-	QuestionId    int            `json:"question_id"`
-	Question      string         `json:"question"`
-	AnswerOptions []LessonAnswer `json:"answer_options"`
+	QuestionId    int            `json:"question_id" redis:"question_id"`
+	Question      string         `json:"question" redis:"question"`
+	AnswerOptions []LessonAnswer `json:"answer_options" redis:"answer_options"`
 }
 
 type AnswerOptionsView struct {

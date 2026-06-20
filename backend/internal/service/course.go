@@ -1,20 +1,25 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log"
+	"strconv"
 
 	"oqu/internal/models"
 	"oqu/internal/repository"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type courseService struct {
-	repo repository.CourseRepository
+	repo  repository.CourseRepository
+	cache *redis.Client
 }
 
-func NewCourseService(r repository.CourseRepository) *courseService {
-	return &courseService{repo: r}
+func NewCourseService(r repository.CourseRepository, c *redis.Client) *courseService {
+	return &courseService{repo: r, cache: c}
 }
 
 func (s *courseService) Get() ([]models.Course, error) {
@@ -32,17 +37,44 @@ func (s *courseService) Get() ([]models.Course, error) {
 }
 
 func (s *courseService) GetById(id int) (*models.Course, error) {
-	course, err := s.repo.GetCourseById(id)
+	ctx := context.Background()
+	var course models.Course
 
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Println("Course service GetById():", err)
-		return nil, notFoundErr
-	} else if err != nil {
-		log.Println("Course service GetById():", err)
-		return nil, internalErr
+	err := s.cache.HGetAll(ctx, "course-"+strconv.Itoa(id)).Scan(&course)
+	if err != nil {
+		c, err := s.repo.GetCourseById(id)
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, notFoundErr
+		} else if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		return c, nil
 	}
 
-	return course, nil
+	if course.Id == 0 {
+		result, err := s.repo.GetCourseById(id)
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, notFoundErr
+		} else if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		key := "course-" + strconv.Itoa(id)
+		err = s.cache.HSet(ctx, key, result).Err()
+		if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		return result, nil
+	}
+
+	return &course, nil
 }
 
 func (s *courseService) GetCourseLessons(id int) ([]models.Lesson, error) {

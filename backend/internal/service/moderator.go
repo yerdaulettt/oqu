@@ -1,6 +1,8 @@
 package service
 
 import (
+	"log"
+
 	"oqu/internal/models"
 	"oqu/internal/repository"
 )
@@ -14,9 +16,21 @@ func NewModeratorService(r repository.ModeratorRepository) *moderatorService {
 }
 
 func (s *moderatorService) ViewComments() ([]models.ModeratorCommentView, error) {
-	return s.repo.ViewComments()
+	comments, err := s.repo.ViewComments()
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	return comments, nil
 }
 
 func (s *moderatorService) DeleteComment(id int) (*models.Comment, error) {
-	return s.repo.DeleteComment(id)
+	comment, err := s.repo.DeleteComment(id)
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	return comment, nil
 }

@@ -1,30 +1,58 @@
 package service
 
 import (
+	"context"
 	"log"
+	"strconv"
+
 	"oqu/internal/models"
 	"oqu/internal/repository"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type lessonService struct {
-	repo repository.LessonRepository
+	repo  repository.LessonRepository
+	cache *redis.Client
 }
 
-func NewLessonService(r repository.LessonRepository) *lessonService {
-	return &lessonService{repo: r}
+func NewLessonService(r repository.LessonRepository, c *redis.Client) *lessonService {
+	return &lessonService{repo: r, cache: c}
 }
 
 func (s *lessonService) GetLesson(id int) (*models.LessonDetail, error) {
-	lesson, err := s.repo.GetLesson(id)
+	ctx := context.Background()
+	var lesson models.LessonDetail
 
+	err := s.cache.HGetAll(ctx, "lesson-"+strconv.Itoa(id)).Scan(&lesson)
 	if err != nil {
-		log.Println(err)
-		return nil, internalErr
-	} else if lesson == nil {
-		return nil, notFoundErr
+		lesson, err := s.repo.GetLesson(id)
+		if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		return lesson, nil
 	}
 
-	return lesson, nil
+	if lesson.Id == 0 {
+		result, err := s.repo.GetLesson(id)
+		if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		key := "lesson-" + strconv.Itoa(id)
+		err = s.cache.HSet(ctx, key, result).Err()
+		if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		return result, nil
+	}
+
+	return &lesson, nil
 }
 
 func (s *lessonService) GetComments(id int) []models.Comment {
@@ -47,7 +75,13 @@ func (s *lessonService) PostComment(lessonId int, userId int, c *models.Comment)
 }
 
 func (s *lessonService) Score(lessonId, userId int) error {
-	return s.repo.Score(lessonId, userId)
+	err := s.repo.Score(lessonId, userId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	return nil
 }
 
 func (s *lessonService) ResetScore(lessonId, userId int) error {
@@ -61,13 +95,38 @@ func (s *lessonService) ResetScore(lessonId, userId int) error {
 }
 
 func (s *lessonService) GetTest(lessonId int) ([]models.StudentTestView, error) {
-	tests, err := s.repo.GetTest(lessonId)
+	ctx := context.Background()
+	var lessonTest []models.StudentTestView
+
+	err := s.cache.HGetAll(ctx, "lessonTest-"+strconv.Itoa(lessonId)).Scan(&lessonTest)
 	if err != nil {
-		log.Println(err)
-		return nil, internalErr
+		test, err := s.repo.GetTest(lessonId)
+		if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		return test, nil
 	}
 
-	return tests, nil
+	if lessonTest == nil {
+		result, err := s.repo.GetTest(lessonId)
+		if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		key := "lessonTest-" + strconv.Itoa(lessonId)
+		err = s.cache.HSet(ctx, key, result).Err()
+		if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		return result, nil
+	}
+
+	return lessonTest, nil
 }
 
 func (s *lessonService) SubmitTest(lessonId int, st []models.SubmitTest) (*models.ResultsOfTest, error) {

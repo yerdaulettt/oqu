@@ -26,11 +26,11 @@ func authRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func courseRouter(db *sql.DB) http.Handler {
+func courseRouter(db *sql.DB, cache *redis.Client) http.Handler {
 	r := chi.NewRouter()
 
 	courseR := postgresql.NewCourseRepo(db)
-	courseS := service.NewCourseService(courseR)
+	courseS := service.NewCourseService(courseR, cache)
 	courseH := handlers.NewCourseHandler(courseS)
 
 	r.HandleFunc("GET /", courseH.Get)
@@ -42,14 +42,14 @@ func courseRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func lessonRouter(db *sql.DB) http.Handler {
+func lessonRouter(db *sql.DB, cache *redis.Client) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.JWTAuthMiddleware)
 	r.Use(middleware.Role("admin", "user"))
 
 	lessonR := postgresql.NewLessonRepo(db)
-	lessonS := service.NewLessonService(lessonR)
+	lessonS := service.NewLessonService(lessonR, cache)
 	lessonH := handlers.NewLessonHandler(lessonS)
 
 	r.HandleFunc("GET /{id}", lessonH.GetLessonById)

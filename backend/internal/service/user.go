@@ -22,41 +22,56 @@ func NewUserService(r repository.UserRepository, c *redis.Client) *userService {
 
 func (s *userService) GetProfileInfo(userId int) (*models.User, error) {
 	ctx := context.Background()
-
 	var user models.User
+
 	err := s.cache.HGetAll(ctx, "user-"+strconv.Itoa(userId)).Scan(&user)
 	if err != nil {
-		log.Println(err)
-		log.Println("CACHE ERROR GOING TO PG")
-		return s.repo.GetProfileInfo(userId)
+		profile, err := s.repo.GetProfileInfo(userId)
+		if err != nil {
+			log.Println(err)
+			return nil, internalErr
+		}
+
+		return profile, nil
 	}
 
 	if user.Id == 0 {
 		result, err := s.repo.GetProfileInfo(userId)
 
 		if err != nil {
-			return nil, err
+			log.Println(err)
+			return nil, internalErr
 		}
 
 		key := "user-" + strconv.Itoa(userId)
 		err = s.cache.HSet(ctx, key, result).Err()
 		if err != nil {
-			log.Println("REDIS ERROR")
-			return nil, err
+			log.Println(err)
+			return nil, internalErr
 		}
 
-		log.Println("NO CACHE, PG RESULT, CACHE SET")
 		return result, nil
 	}
 
-	log.Println("FROM CACHE")
 	return &user, nil
 }
 
 func (s *userService) GetMyClasses(userId int) ([]models.Course, error) {
-	return s.repo.GetMyClasses(userId)
+	courses, err := s.repo.GetMyClasses(userId)
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	return courses, nil
 }
 
 func (s *userService) GetAllCoursesRating(userId int) ([]models.Rating, error) {
-	return s.repo.GetAllCoursesRating(userId)
+	rating, err := s.repo.GetAllCoursesRating(userId)
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	return rating, nil
 }
