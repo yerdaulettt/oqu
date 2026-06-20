@@ -97,3 +97,50 @@ func (h *adminHandler) AddLesson(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(`{"msg": "lesson with id ` + strconv.Itoa(id) + `"}`))
 }
+
+func (h *adminHandler) AddTest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	var t []*models.NewTest
+	err = json.NewDecoder(r.Body).Decode(&t)
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.srvc.AddTest(lessonId, t)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Write([]byte(`{"message": "New test"}`))
+}
+
+func (h *adminHandler) GetTest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	tests, err := h.srvc.GetTest(lessonId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&tests)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+}

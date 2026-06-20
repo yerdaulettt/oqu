@@ -59,3 +59,35 @@ func (s *lessonService) ResetScore(lessonId, userId int) error {
 
 	return nil
 }
+
+func (s *lessonService) GetTest(lessonId int) ([]models.StudentTestView, error) {
+	tests, err := s.repo.GetTest(lessonId)
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	return tests, nil
+}
+
+func (s *lessonService) SubmitTest(lessonId int, st []models.SubmitTest) (*models.ResultsOfTest, error) {
+	correctAnswers, err := s.repo.GetCorrectAnswers(lessonId)
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	if len(correctAnswers) != len(st) {
+		return nil, incorrectTestSubmit
+	}
+
+	totalQuestions := len(correctAnswers)
+	points := 0
+	for i := range totalQuestions {
+		if correctAnswers[i].QuestionId == st[i].QuestionId && correctAnswers[i].CorrectOptionId == st[i].SelectedChoice {
+			points += 1
+		}
+	}
+
+	return &models.ResultsOfTest{TotalQuestions: totalQuestions, Point: points}, nil
+}

@@ -83,3 +83,48 @@ func (r *lessonRepo) ResetScore(lessonId, userId int) error {
 
 	return nil
 }
+
+func (r *lessonRepo) GetTest(lessonId int) ([]models.StudentTestView, error) {
+	query := `select q.id, q.text, json_agg(json_build_object('answer_id', a.id, 'text', a.text)) as answer_options from
+	questions as q join answers as a on q.id = a.question_id where q.lesson_id = $1 group by q.id`
+	var tests []models.StudentTestView
+
+	rows, err := r.db.Query(query, lessonId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var test models.StudentTestView
+		err := rows.Scan(&test.QuestionId, &test.Question, &test.AnswerOptions)
+		if err != nil {
+			return nil, err
+		}
+		tests = append(tests, test)
+	}
+
+	return tests, nil
+}
+
+func (r *lessonRepo) GetCorrectAnswers(lessonId int) ([]models.CorrectAnswers, error) {
+	query := `select q.id, a.id from questions as q join answers as a on q.id = a.question_id where lesson_id = $1 and is_correct = true`
+	var correctAns []models.CorrectAnswers
+
+	rows, err := r.db.Query(query, lessonId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var ca models.CorrectAnswers
+		err := rows.Scan(&ca.QuestionId, &ca.CorrectOptionId)
+		if err != nil {
+			return nil, err
+		}
+		correctAns = append(correctAns, ca)
+	}
+
+	return correctAns, nil
+}

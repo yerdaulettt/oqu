@@ -16,6 +16,8 @@ type LessonRepository interface {
 	PostComment(lessonId int, userId int, c *models.Comment) (bool, error)
 	Score(lessonId, userId int) error
 	ResetScore(lessonId, userId int) error
+	GetTest(lessonId int) ([]models.StudentTestView, error)
+	GetCorrectAnswers(lessonId int) ([]models.CorrectAnswers, error)
 }
 
 type CommentRepository interface {
@@ -33,6 +35,8 @@ type AdminRepository interface {
 	MakeCourse(c *models.Course) (int, error)
 	DeleteCourse(id int) (*models.Course, error)
 	AddLesson(courseId int, l *models.Lesson) (int, error)
+	AddTest(lessonId int, t []*models.NewTest) error
+	GetTest(lessonId int) ([]models.AdminTestView, error)
 }
 
 type ModeratorRepository interface {

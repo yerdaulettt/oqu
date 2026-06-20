@@ -138,3 +138,54 @@ func (h *lessonHandler) ResetScore(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(`{"message": "Score reset ok"}`))
 }
+
+func (h *lessonHandler) GetTest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	test, err := h.srvc.GetTest(lessonId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&test)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+}
+
+func (h *lessonHandler) SubmitTest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	var st []models.SubmitTest
+	err = json.NewDecoder(r.Body).Decode(&st)
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.srvc.SubmitTest(lessonId, st)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&result)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+}

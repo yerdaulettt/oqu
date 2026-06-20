@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"database/sql"
+	"strconv"
 
 	"oqu/internal/models"
 )
@@ -68,4 +69,93 @@ func (r *adminRepo) AddLesson(courseId int, l *models.Lesson) (int, error) {
 	}
 
 	return id, nil
+}
+
+func addTestHelper(tests []*models.NewTest) (string, []any) {
+	query := `insert into answers (text, is_correct, question_id) values `
+	cnt := 1
+	params := []any{}
+
+	for i, t := range tests {
+		for j, a := range t.AnswerOptions {
+			query += `($` + strconv.Itoa(cnt) + `, $` + strconv.Itoa(cnt+1) + `, $` + strconv.Itoa(cnt+2) + `)`
+			cnt += 3
+			params = append(params, a.Text, a.IsCorrect, t.Id)
+
+			if i+1 == len(tests) && j+1 == len(t.AnswerOptions) {
+				query += `;`
+			} else {
+				query += `, `
+			}
+		}
+	}
+
+	return query, params
+}
+
+func (r *adminRepo) AddTest(lessonId int, t []*models.NewTest) error {
+	query := `insert into questions (text, lesson_id) values `
+	cnt := 1
+	params := []any{}
+
+	for i, q := range t {
+		query += `($` + strconv.Itoa(cnt) + `, $` + strconv.Itoa(cnt+1) + `)`
+		cnt += 2
+		params = append(params, q.Question, lessonId)
+
+		if i+1 == len(t) {
+			query += ` returning id;`
+		} else {
+			query += `, `
+		}
+	}
+
+	rows, err := r.db.Query(query, params...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	cnt = 0
+	for rows.Next() {
+		var id int
+		err := rows.Scan(&id)
+		if err != nil {
+			return err
+		}
+		t[cnt].Id = id
+		cnt += 1
+	}
+
+	query, params = addTestHelper(t)
+
+	_, err = r.db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *adminRepo) GetTest(lessonId int) ([]models.AdminTestView, error) {
+	query := `select q.id, q.text, json_agg(json_build_object('text', a.text, 'is_correct', a.is_correct)) as answer_options from
+	questions as q join answers as a on q.id = a.question_id where q.lesson_id = $1 group by q.id`
+
+	var adminTests []models.AdminTestView
+	rows, err := r.db.Query(query, lessonId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var adminTest models.AdminTestView
+		err := rows.Scan(&adminTest.QuestionId, &adminTest.Question, &adminTest.AnswerOptions)
+		if err != nil {
+			return nil, err
+		}
+		adminTests = append(adminTests, adminTest)
+	}
+
+	return adminTests, nil
 }

@@ -57,6 +57,8 @@ func lessonRouter(db *sql.DB) http.Handler {
 	r.HandleFunc("POST /{id}/comments", lessonH.PostComment)
 	r.HandleFunc("POST /{id}/score", lessonH.Score)
 	r.HandleFunc("POST /{id}/reset", lessonH.ResetScore)
+	r.HandleFunc("GET /{id}/test", lessonH.GetTest)
+	r.HandleFunc("POST /{id}/test", lessonH.SubmitTest)
 
 	return r
 }
@@ -90,6 +92,8 @@ func adminRouter(db *sql.DB) http.Handler {
 	r.HandleFunc("POST /courses", adminH.MakeCourse)
 	r.HandleFunc("DELETE /courses/{id}", adminH.Delete)
 	r.HandleFunc("POST /courses/{id}/lessons", adminH.AddLesson)
+	r.HandleFunc("POST /lessons/{id}/test", adminH.AddTest)
+	r.HandleFunc("GET /lessons/{id}/test", adminH.GetTest)
 
 	return r
 }

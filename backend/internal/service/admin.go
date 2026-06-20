@@ -53,3 +53,23 @@ func (s *adminService) AddLesson(courseId int, l *models.Lesson) (int, error) {
 
 	return id, nil
 }
+
+func (s *adminService) AddTest(lessonId int, t []*models.NewTest) error {
+	err := s.repo.AddTest(lessonId, t)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	return nil
+}
+
+func (s *adminService) GetTest(lessonId int) ([]models.AdminTestView, error) {
+	tests, err := s.repo.GetTest(lessonId)
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	return tests, nil
+}
