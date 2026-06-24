@@ -30,8 +30,8 @@ func (r *lessonRepo) GetLesson(id int) (*models.LessonDetail, error) {
 func (r *lessonRepo) GetComments(id int) ([]models.Comment, error) {
 	var comments []models.Comment
 
-	query := `select c.id, c.content, sum(voted::integer) as votes from
-	comments as c join comment_votes as v on c.id = v.comment_id where lesson_id = $1 group by c.id`
+	query := `select c.id, c.content, coalesce(sum(voted::integer), 0) as votes from
+	comments as c left join comment_votes as v on c.id = v.comment_id where lesson_id = $1 group by c.id`
 
 	rows, err := r.db.Query(query, id)
 	if err != nil {

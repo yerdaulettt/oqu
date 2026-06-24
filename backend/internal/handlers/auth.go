@@ -28,6 +28,15 @@ func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(userReg.Name) == 0 || len(userReg.Username) == 0 || len(userReg.Password) == 0 {
+		jsonResponse(w, http.StatusBadRequest, "Provide correct info!")
+		return
+	}
+
+	if len(userReg.Role) == 0 {
+		userReg.Role = "user"
+	}
+
 	id := h.srvc.Register(&userReg)
 	if id == -1 {
 		w.Write([]byte(`{"error": "internal server error"}`))

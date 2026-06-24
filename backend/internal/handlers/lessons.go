@@ -44,19 +44,19 @@ func (h *lessonHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		w.Write([]byte(`{"error": "provide number"}`))
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
 		return
 	}
 
-	comments := h.srvc.GetComments(id)
-	if comments == nil {
-		w.Write([]byte(`{"error": "internal server error"}`))
+	comments, err := h.srvc.GetComments(id)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(&comments)
 	if err != nil {
-		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
 	}
 }
 

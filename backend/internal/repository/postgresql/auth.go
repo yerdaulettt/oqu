@@ -26,8 +26,8 @@ func (r *authRepo) Register(u *models.UserRegister) (int, error) {
 	}
 
 	var id int
-	query := `insert into users (username, password, role) values ($1, $2, $3) returning id`
-	err = r.db.QueryRow(query, u.Username, hashedPassword, u.Role).Scan(&id)
+	query := `insert into users (name, username, password, role) values ($1, $2, $3, $4) returning id`
+	err = r.db.QueryRow(query, u.Name, u.Username, hashedPassword, u.Role).Scan(&id)
 	if err != nil {
 		return 0, err
 	}

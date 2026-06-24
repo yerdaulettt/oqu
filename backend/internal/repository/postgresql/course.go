@@ -70,7 +70,7 @@ func (r *courseRepo) GetCourseLessons(id int) ([]models.Lesson, error) {
 }
 
 func (r *courseRepo) EnrollInClass(classId int, userId int) error {
-	query := `insert into enrollments (course_id, user_id) values ($1, $2)`
+	query := `insert into enrollments (course_id, user_id) values ($1, $2) on conflict do nothing`
 	_, err := r.db.Exec(query, classId, userId)
 	if err != nil {
 		return err
