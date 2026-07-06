@@ -42,13 +42,19 @@ func (h *lessonHandler) GetLessonById(w http.ResponseWriter, r *http.Request) {
 func (h *lessonHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	id, err := strconv.Atoi(r.PathValue("id"))
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		jsonResponse(w, http.StatusBadRequest, "Provide number")
 		return
 	}
 
-	comments, err := h.srvc.GetComments(id)
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "Incorrect user id")
+		return
+	}
+
+	comments, err := h.srvc.GetComments(lessonId, userId)
 	if err != nil {
 		jsonResponse(w, http.StatusInternalServerError, err.Error())
 		return

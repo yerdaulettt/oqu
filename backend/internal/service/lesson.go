@@ -55,8 +55,8 @@ func (s *lessonService) GetLesson(id int) (*models.LessonDetail, error) {
 	return &lesson, nil
 }
 
-func (s *lessonService) GetComments(id int) ([]models.Comment, error) {
-	comments, err := s.repo.GetComments(id)
+func (s *lessonService) GetComments(lessonId, userId int) ([]models.Comment, error) {
+	comments, err := s.repo.GetComments(lessonId, userId)
 	if err != nil {
 		log.Println(err)
 		return nil, internalErr

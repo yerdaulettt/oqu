@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"oqu/internal/service"
 	"strconv"
@@ -40,8 +41,11 @@ func (h *moderatorHandler) DeleteComment(w http.ResponseWriter, r *http.Request)
 	}
 
 	deleted, err := h.srvc.DeleteComment(id)
-	if err != nil {
-		jsonResponse(w, http.StatusInternalServerError, "internal server error")
+	if errors.Is(err, service.NotFoundErr) {
+		jsonResponse(w, http.StatusNotFound, err.Error())
+		return
+	} else if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

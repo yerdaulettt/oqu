@@ -1,14 +1,23 @@
 package models
 
+import "time"
+
 type Comment struct {
-	Id      int    `json:"id"`
-	Content string `json:"content"`
-	Votes   int    `json:"votes"`
+	Id         int       `json:"id"`
+	Content    string    `json:"content"`
+	AuthorName string    `json:"author_name"`
+	Votes      int       `json:"votes"`
+	Voted      bool      `json:"voted"`
+	PostedAt   time.Time `json:"posted_at"`
 }
 
 type ModeratorCommentView struct {
-	Id         int    `json:"id"`
-	Content    string `json:"content"`
-	CourseName string `json:"course_name"`
-	LessonName string `json:"lesson_name"`
+	Id         int       `json:"id"`
+	Content    string    `json:"content"`
+	Username   string    `json:"username"`
+	CourseName string    `json:"course_name"`
+	CourseId   int       `json:"course_id"`
+	LessonName string    `json:"lesson_name"`
+	LessonId   int       `json:"lesson_id"`
+	PostedAt   time.Time `json:"posted_at"`
 }

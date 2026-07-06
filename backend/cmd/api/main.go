@@ -7,13 +7,14 @@ import (
 	"oqu/internal/configs"
 	"oqu/internal/repository/postgresql"
 
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
-	// if err := godotenv.Load(); err != nil {
-	// 	panic(err)
-	// }
+	if err := godotenv.Load(); err != nil {
+		panic(err)
+	}
 
 	cfg := configs.NewPostgresqlConfig()
 	db := postgresql.NewPostgresqlConn(cfg)

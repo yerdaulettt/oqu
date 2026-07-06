@@ -12,7 +12,7 @@ type CourseRepository interface {
 
 type LessonRepository interface {
 	GetLesson(id int) (*models.LessonDetail, error)
-	GetComments(id int) ([]models.Comment, error)
+	GetComments(lessonId, userId int) ([]models.Comment, error)
 	PostComment(lessonId int, userId int, c *models.Comment) (bool, error)
 	Score(lessonId, userId int) error
 	ResetScore(lessonId, userId int) error

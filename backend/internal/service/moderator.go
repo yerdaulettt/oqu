@@ -1,6 +1,8 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
 	"log"
 
 	"oqu/internal/models"
@@ -27,7 +29,10 @@ func (s *moderatorService) ViewComments() ([]models.ModeratorCommentView, error)
 
 func (s *moderatorService) DeleteComment(id int) (*models.Comment, error) {
 	comment, err := s.repo.DeleteComment(id)
-	if err != nil {
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, NotFoundErr
+	} else if err != nil {
 		log.Println(err)
 		return nil, internalErr
 	}

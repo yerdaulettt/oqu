@@ -36,8 +36,8 @@ func courseRouter(db *sql.DB, cache *redis.Client) http.Handler {
 	r.HandleFunc("GET /", courseH.Get)
 	r.HandleFunc("GET /{id}", courseH.GetById)
 	r.HandleFunc("GET /{id}/lessons", courseH.GetCourseLessons)
-	r.With(middleware.JWTAuthMiddleware).HandleFunc("POST /{id}/enroll", courseH.EnrollInClass)
-	r.With(middleware.JWTAuthMiddleware).HandleFunc("POST /{id}/reset", courseH.ResetRating)
+	r.With(middleware.JWTAuthMiddleware, middleware.Role("user")).HandleFunc("POST /{id}/enroll", courseH.EnrollInClass)
+	r.With(middleware.JWTAuthMiddleware, middleware.Role("user")).HandleFunc("POST /{id}/reset", courseH.ResetRating)
 
 	return r
 }
@@ -46,7 +46,6 @@ func lessonRouter(db *sql.DB, cache *redis.Client) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.JWTAuthMiddleware)
-	r.Use(middleware.Role("admin", "user"))
 
 	lessonR := postgresql.NewLessonRepo(db)
 	lessonS := service.NewLessonService(lessonR, cache)
@@ -55,10 +54,10 @@ func lessonRouter(db *sql.DB, cache *redis.Client) http.Handler {
 	r.HandleFunc("GET /{id}", lessonH.GetLessonById)
 	r.HandleFunc("GET /{id}/comments", lessonH.GetComments)
 	r.HandleFunc("POST /{id}/comments", lessonH.PostComment)
-	r.HandleFunc("POST /{id}/score", lessonH.Score)
-	r.HandleFunc("POST /{id}/reset", lessonH.ResetScore)
+	r.With(middleware.Role("user")).HandleFunc("POST /{id}/score", lessonH.Score)
+	r.With(middleware.Role("user")).HandleFunc("POST /{id}/reset", lessonH.ResetScore)
 	r.HandleFunc("GET /{id}/test", lessonH.GetTest)
-	r.HandleFunc("POST /{id}/test", lessonH.SubmitTest)
+	r.With(middleware.Role("user")).HandleFunc("POST /{id}/test", lessonH.SubmitTest)
 
 	return r
 }
@@ -124,8 +123,8 @@ func userRouter(db *sql.DB, cache *redis.Client) http.Handler {
 	userH := handlers.NewUserHandler(userS)
 
 	r.HandleFunc("GET /profile", userH.GetProfileInfo)
-	r.HandleFunc("GET /enrollments", userH.GetMyClasses)
-	r.HandleFunc("GET /rating", userH.GetAllCoursesRating)
+	r.With(middleware.Role("user")).HandleFunc("GET /enrollments", userH.GetMyClasses)
+	r.With(middleware.Role("user")).HandleFunc("GET /rating", userH.GetAllCoursesRating)
 
 	return r
 }

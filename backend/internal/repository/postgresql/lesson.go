@@ -27,13 +27,24 @@ func (r *lessonRepo) GetLesson(id int) (*models.LessonDetail, error) {
 	return &l, nil
 }
 
-func (r *lessonRepo) GetComments(id int) ([]models.Comment, error) {
+func (r *lessonRepo) GetComments(lessonId, userId int) ([]models.Comment, error) {
 	var comments []models.Comment
 
-	query := `select c.id, c.content, coalesce(sum(voted::integer), 0) as votes from
-	comments as c left join comment_votes as v on c.id = v.comment_id where lesson_id = $1 group by c.id`
+	query := `
+	with comment_results as (
+		select c.id, c.content, c.user_id, u.name, coalesce(sum(v.voted::integer), 0) as votes, c.posted_at from
+		comments as c left join comment_votes as v on c.id = v.comment_id join users as u on c.user_id = u.id
+		where c.lesson_id = $1 group by c.id, u.id
+	), active_user (id) as (
+		values ($2::integer)
+	)
 
-	rows, err := r.db.Query(query, id)
+	select cr.id, cr.content, cr.name, cr.votes,
+	coalesce((select voted from comment_votes where user_id = (select id from active_user) and comment_id = cr.id), false) as voted, cr.posted_at
+	from comment_results as cr left join comment_votes as v on cr.id = v.comment_id
+	left join users as u on cr.user_id = u.id and u.id = (select id from active_user)`
+
+	rows, err := r.db.Query(query, lessonId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +52,7 @@ func (r *lessonRepo) GetComments(id int) ([]models.Comment, error) {
 
 	for rows.Next() {
 		var c models.Comment
-		err := rows.Scan(&c.Id, &c.Content, &c.Votes)
+		err := rows.Scan(&c.Id, &c.Content, &c.AuthorName, &c.Votes, &c.Voted, &c.PostedAt)
 		if err != nil {
 			return nil, err
 		}

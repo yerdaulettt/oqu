@@ -1,0 +1,1 @@
+alter table comments drop column if exists posted_at;

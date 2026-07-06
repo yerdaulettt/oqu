@@ -17,8 +17,11 @@ func NewModeratorRepo(db *sql.DB) *moderatorRepo {
 func (r *moderatorRepo) ViewComments() ([]models.ModeratorCommentView, error) {
 	var comments []models.ModeratorCommentView
 
-	query := `select c.id, c.content as comment, co.name as course, l.name as lesson from
-	(comments as c join lessons as l on c.lesson_id = l.id) join courses as co on course_id = co.id`
+	query := `
+	select c.id, c.content, u.username, courses.name as course_name, courses.id as course_id,
+	l.name as lesson_name, l.id as lesson_id, c.posted_at
+	from (comments as c join lessons as l on c.lesson_id = l.id)
+	join courses on l.course_id = courses.id join users as u on c.user_id = u.id order by posted_at desc`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -28,7 +31,7 @@ func (r *moderatorRepo) ViewComments() ([]models.ModeratorCommentView, error) {
 
 	for rows.Next() {
 		var c models.ModeratorCommentView
-		err := rows.Scan(&c.Id, &c.Content, &c.CourseName, &c.LessonName)
+		err := rows.Scan(&c.Id, &c.Content, &c.Username, &c.CourseName, &c.CourseId, &c.LessonName, &c.LessonId, &c.PostedAt)
 		if err != nil {
 			return nil, err
 		}

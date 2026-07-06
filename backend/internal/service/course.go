@@ -27,7 +27,7 @@ func (s *courseService) Get() ([]models.Course, error) {
 
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Println("Course service Get():", err)
-		return nil, notFoundErr
+		return nil, NotFoundErr
 	} else if err != nil {
 		log.Println("Course service Get():", err)
 		return nil, internalErr
@@ -45,7 +45,7 @@ func (s *courseService) GetById(id int) (*models.Course, error) {
 		c, err := s.repo.GetCourseById(id)
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, notFoundErr
+			return nil, NotFoundErr
 		} else if err != nil {
 			log.Println(err)
 			return nil, internalErr
@@ -58,7 +58,7 @@ func (s *courseService) GetById(id int) (*models.Course, error) {
 		result, err := s.repo.GetCourseById(id)
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, notFoundErr
+			return nil, NotFoundErr
 		} else if err != nil {
 			log.Println(err)
 			return nil, internalErr
@@ -84,7 +84,7 @@ func (s *courseService) GetCourseLessons(id int) ([]models.Lesson, error) {
 		log.Println(err)
 		return nil, internalErr
 	} else if lessons == nil {
-		return nil, notFoundErr
+		return nil, NotFoundErr
 	}
 
 	return lessons, nil
