@@ -2,57 +2,57 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"log"
 	"strconv"
+	"time"
 
 	"oqu/internal/models"
 	"oqu/internal/repository"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type lessonService struct {
 	repo  repository.LessonRepository
-	cache *redis.Client
+	cache repository.CacheRepository
 }
 
-func NewLessonService(r repository.LessonRepository, c *redis.Client) *lessonService {
+func NewLessonService(r repository.LessonRepository, c repository.CacheRepository) *lessonService {
 	return &lessonService{repo: r, cache: c}
 }
 
 func (s *lessonService) GetLesson(id int) (*models.LessonDetail, error) {
 	ctx := context.Background()
-	var lesson models.LessonDetail
+	var l models.LessonDetail
+	key := "lesson-" + strconv.Itoa(id)
 
-	err := s.cache.HGetAll(ctx, "lesson-"+strconv.Itoa(id)).Scan(&lesson)
+	value, err := s.cache.Get(ctx, key)
+	if err == nil && value != nil {
+		if err := json.Unmarshal(value, &l); err == nil {
+			return &l, nil
+		}
+	}
+
+	lesson, err := s.repo.GetLesson(id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, NotFoundErr
+	} else if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	result, err := json.Marshal(lesson)
 	if err != nil {
-		lesson, err := s.repo.GetLesson(id)
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		return lesson, nil
+		log.Println("marshal", err)
 	}
 
-	if lesson.Id == 0 {
-		result, err := s.repo.GetLesson(id)
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		key := "lesson-" + strconv.Itoa(id)
-		err = s.cache.HSet(ctx, key, result).Err()
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		return result, nil
+	err = s.cache.Set(ctx, key, result, 5*time.Minute)
+	if err != nil {
+		log.Println("set", err)
 	}
 
-	return &lesson, nil
+	return lesson, nil
 }
 
 func (s *lessonService) GetComments(lessonId, userId int) ([]models.Comment, error) {
@@ -96,34 +96,33 @@ func (s *lessonService) ResetScore(lessonId, userId int) error {
 
 func (s *lessonService) GetTest(lessonId int) ([]models.StudentTestView, error) {
 	ctx := context.Background()
-	var lessonTest []models.StudentTestView
+	var lt []models.StudentTestView
 
-	err := s.cache.HGetAll(ctx, "lessonTest-"+strconv.Itoa(lessonId)).Scan(&lessonTest)
-	if err != nil {
-		test, err := s.repo.GetTest(lessonId)
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
+	key := "lessontest-" + strconv.Itoa(lessonId)
+
+	value, err := s.cache.Get(ctx, key)
+	if err == nil && value != nil {
+		if err := json.Unmarshal(value, &lt); err == nil {
+			return lt, nil
 		}
-
-		return test, nil
 	}
 
-	if lessonTest == nil {
-		result, err := s.repo.GetTest(lessonId)
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
+	lessonTest, err := s.repo.GetTest(lessonId)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, NotFoundErr
+	} else if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
 
-		key := "lessonTest-" + strconv.Itoa(lessonId)
-		err = s.cache.HSet(ctx, key, result).Err()
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
+	result, err := json.Marshal(lessonTest)
+	if err != nil {
+		log.Println("marshal", err)
+	}
 
-		return result, nil
+	err = s.cache.Set(ctx, key, result, 5*time.Minute)
+	if err != nil {
+		log.Println("set", err)
 	}
 
 	return lessonTest, nil

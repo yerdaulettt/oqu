@@ -2,58 +2,53 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"strconv"
+	"time"
 
 	"oqu/internal/models"
 	"oqu/internal/repository"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type userService struct {
 	repo  repository.UserRepository
-	cache *redis.Client
+	cache repository.CacheRepository
 }
 
-func NewUserService(r repository.UserRepository, c *redis.Client) *userService {
+func NewUserService(r repository.UserRepository, c repository.CacheRepository) *userService {
 	return &userService{repo: r, cache: c}
 }
 
 func (s *userService) GetProfileInfo(userId int) (*models.User, error) {
 	ctx := context.Background()
 	var user models.User
+	key := "user-" + strconv.Itoa(userId)
 
-	err := s.cache.HGetAll(ctx, "user-"+strconv.Itoa(userId)).Scan(&user)
+	value, err := s.cache.Get(ctx, key)
+	if err == nil && value != nil {
+		if err := json.Unmarshal(value, &user); err == nil {
+			return &user, nil
+		}
+	}
+
+	profile, err := s.repo.GetProfileInfo(userId)
 	if err != nil {
-		profile, err := s.repo.GetProfileInfo(userId)
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		return profile, nil
+		log.Println(err)
+		return nil, internalErr
 	}
 
-	if user.Id == 0 {
-		result, err := s.repo.GetProfileInfo(userId)
-
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		key := "user-" + strconv.Itoa(userId)
-		err = s.cache.HSet(ctx, key, result).Err()
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		return result, nil
+	result, err := json.Marshal(profile)
+	if err != nil {
+		log.Println("marshal", err)
 	}
 
-	return &user, nil
+	err = s.cache.Set(ctx, key, result, 5*time.Minute)
+	if err != nil {
+		log.Println("set", err)
+	}
+
+	return profile, nil
 }
 
 func (s *userService) GetMyClasses(userId int) ([]models.Course, error) {

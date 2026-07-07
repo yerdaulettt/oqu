@@ -1,6 +1,11 @@
 package repository
 
-import "oqu/internal/models"
+import (
+	"context"
+	"time"
+
+	"oqu/internal/models"
+)
 
 type CourseRepository interface {
 	GetCourses() ([]models.Course, error)
@@ -48,4 +53,9 @@ type UserRepository interface {
 	GetProfileInfo(userId int) (*models.User, error)
 	GetMyClasses(userId int) ([]models.Course, error)
 	GetAllCoursesRating(userId int) ([]models.Rating, error)
+}
+
+type CacheRepository interface {
+	Get(ctx context.Context, key string) ([]byte, error)
+	Set(ctx context.Context, key string, value []byte, ttl time.Duration) error
 }

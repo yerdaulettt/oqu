@@ -6,11 +6,11 @@ import (
 
 	"oqu/internal/handlers"
 	"oqu/internal/middleware"
+	"oqu/internal/repository"
 	"oqu/internal/repository/postgresql"
 	"oqu/internal/service"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/redis/go-redis/v9"
 )
 
 func authRouter(db *sql.DB) http.Handler {
@@ -26,7 +26,7 @@ func authRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func courseRouter(db *sql.DB, cache *redis.Client) http.Handler {
+func courseRouter(db *sql.DB, cache repository.CacheRepository) http.Handler {
 	r := chi.NewRouter()
 
 	courseR := postgresql.NewCourseRepo(db)
@@ -42,7 +42,7 @@ func courseRouter(db *sql.DB, cache *redis.Client) http.Handler {
 	return r
 }
 
-func lessonRouter(db *sql.DB, cache *redis.Client) http.Handler {
+func lessonRouter(db *sql.DB, cache repository.CacheRepository) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.JWTAuthMiddleware)
@@ -113,7 +113,7 @@ func moderatorRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func userRouter(db *sql.DB, cache *redis.Client) http.Handler {
+func userRouter(db *sql.DB, cache repository.CacheRepository) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.JWTAuthMiddleware)

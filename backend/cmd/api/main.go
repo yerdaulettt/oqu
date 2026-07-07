@@ -6,6 +6,7 @@ import (
 	"oqu/internal/app"
 	"oqu/internal/configs"
 	"oqu/internal/repository/postgresql"
+	"oqu/internal/repository/rediscache"
 
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -28,5 +29,7 @@ func main() {
 	})
 	defer cache.Close()
 
-	app.Bastau(db, cache)
+	cacheRepo := rediscache.NewCacheRepository(cache)
+
+	app.Bastau(db, cacheRepo)
 }

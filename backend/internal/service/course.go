@@ -3,22 +3,22 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"log"
 	"strconv"
+	"time"
 
 	"oqu/internal/models"
 	"oqu/internal/repository"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type courseService struct {
 	repo  repository.CourseRepository
-	cache *redis.Client
+	cache repository.CacheRepository
 }
 
-func NewCourseService(r repository.CourseRepository, c *redis.Client) *courseService {
+func NewCourseService(r repository.CourseRepository, c repository.CacheRepository) *courseService {
 	return &courseService{repo: r, cache: c}
 }
 
@@ -38,43 +38,35 @@ func (s *courseService) Get() ([]models.Course, error) {
 
 func (s *courseService) GetById(id int) (*models.Course, error) {
 	ctx := context.Background()
-	var course models.Course
+	var c models.Course
+	key := "course-" + strconv.Itoa(id)
 
-	err := s.cache.HGetAll(ctx, "course-"+strconv.Itoa(id)).Scan(&course)
+	value, err := s.cache.Get(ctx, key)
+	if err == nil && value != nil {
+		if err := json.Unmarshal(value, &c); err == nil {
+			return &c, nil
+		}
+	}
+
+	course, err := s.repo.GetCourseById(id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, NotFoundErr
+	} else if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	result, err := json.Marshal(course)
 	if err != nil {
-		c, err := s.repo.GetCourseById(id)
-
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, NotFoundErr
-		} else if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		return c, nil
+		log.Println("marshal", err)
 	}
 
-	if course.Id == 0 {
-		result, err := s.repo.GetCourseById(id)
-
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, NotFoundErr
-		} else if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		key := "course-" + strconv.Itoa(id)
-		err = s.cache.HSet(ctx, key, result).Err()
-		if err != nil {
-			log.Println(err)
-			return nil, internalErr
-		}
-
-		return result, nil
+	err = s.cache.Set(ctx, key, result, 5*time.Minute)
+	if err != nil {
+		log.Println("set", err)
 	}
 
-	return &course, nil
+	return course, nil
 }
 
 func (s *courseService) GetCourseLessons(id int) ([]models.Lesson, error) {

@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"oqu/internal/middleware"
+	"oqu/internal/repository"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/redis/go-redis/v9"
 )
 
-func Bastau(db *sql.DB, cache *redis.Client) {
+func Bastau(db *sql.DB, cache repository.CacheRepository) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.LogMiddleware)
