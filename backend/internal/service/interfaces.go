@@ -4,14 +4,13 @@ import "oqu/internal/models"
 
 type CourseService interface {
 	Get() ([]models.Course, error)
-	GetById(id int) (*models.Course, error)
-	GetCourseLessons(id int) ([]models.Lesson, error)
+	GetById(id, userId int) (*models.CourseDetails, error)
 	EnrollInClass(classId int, userId int) error
 	ResetRating(courseId, userId int) error
 }
 
 type LessonService interface {
-	GetLesson(id int) (*models.LessonDetail, error)
+	GetLesson(id, userId int) (*models.LessonDetail, error)
 	GetComments(lessonId, userId int) ([]models.Comment, error)
 	PostComment(lessonId int, userId int, c *models.Comment) bool
 	Score(lessonId, userId int) error

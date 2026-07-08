@@ -34,8 +34,7 @@ func courseRouter(db *sql.DB, cache repository.CacheRepository) http.Handler {
 	courseH := handlers.NewCourseHandler(courseS)
 
 	r.HandleFunc("GET /", courseH.Get)
-	r.HandleFunc("GET /{id}", courseH.GetById)
-	r.HandleFunc("GET /{id}/lessons", courseH.GetCourseLessons)
+	r.With(middleware.JWTAuthMiddleware).HandleFunc("GET /{id}", courseH.GetById)
 	r.With(middleware.JWTAuthMiddleware, middleware.Role("user")).HandleFunc("POST /{id}/enroll", courseH.EnrollInClass)
 	r.With(middleware.JWTAuthMiddleware, middleware.Role("user")).HandleFunc("POST /{id}/reset", courseH.ResetRating)
 

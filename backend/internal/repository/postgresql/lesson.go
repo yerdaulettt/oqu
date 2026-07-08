@@ -15,11 +15,20 @@ func NewLessonRepo(db *sql.DB) *lessonRepo {
 	return &lessonRepo{db: db}
 }
 
-func (r *lessonRepo) GetLesson(id int) (*models.LessonDetail, error) {
-	query := `select l.id, l.name, l.content, c.name, c.id from lessons as l join courses as c on l.course_id = c.id where l.id = $1`
+func (r *lessonRepo) GetLesson(id, userId int) (*models.LessonDetail, error) {
+	query := `
+	with
+	active_user as
+		(select id, role from users where id = $1)
+
+	select
+		l.id, l.name, l.content, c.name as course_name, c.id as course_id,
+		case when (select role from active_user) = 'user' then coalesce(r.completed, false) end as completed
+	from (lessons as l left join rating as r on l.id = r.lesson_id and r.user_id = (select id from active_user))
+	join courses as c on l.course_id = c.id where l.id = $2`
 
 	var l models.LessonDetail
-	err := r.db.QueryRow(query, id).Scan(&l.Id, &l.Name, &l.Content, &l.CourseName, &l.CourseId)
+	err := r.db.QueryRow(query, userId, id).Scan(&l.Id, &l.Name, &l.Content, &l.CourseName, &l.CourseId, &l.Completed)
 	if err != nil {
 		return nil, err
 	}

@@ -35,38 +35,26 @@ func (r *courseRepo) GetCourses() ([]models.Course, error) {
 	return courses, nil
 }
 
-func (r *courseRepo) GetCourseById(id int) (*models.Course, error) {
-	var course models.Course
+func (r *courseRepo) GetCourseById(id, userId int) (*models.CourseDetails, error) {
+	var c models.CourseDetails
+	query := `
+	with
+	active_user as
+		(select id, role from users where id = $1),
+	course_lessons as
+		(select
+			l.id as lesson_id, l.name as lesson_name,
+			case when (select role from active_user) = 'user' then coalesce(r.completed, false) end as completed
+		from lessons as l left join rating as r on l.id = r.lesson_id and r.user_id = (select id from active_user) where l.course_id = $2)
 
-	query := `select id, name, description from courses where id = $1`
-	err := r.db.QueryRow(query, id).Scan(&course.Id, &course.Name, &course.Description)
+	select id, name, description, (select json_agg(to_jsonb(course_lessons)) as lessons from course_lessons) from courses where id = $3`
+
+	err := r.db.QueryRow(query, userId, id, id).Scan(&c.Id, &c.Name, &c.Description, &c.Lessons)
 	if err != nil {
 		return nil, err
 	}
 
-	return &course, nil
-}
-
-func (r *courseRepo) GetCourseLessons(id int) ([]models.Lesson, error) {
-	var courseLessons []models.Lesson
-
-	query := `select l.id, l.name, l.content from courses as c join lessons as l on c.id = l.course_id where c.id = $1`
-	rows, err := r.db.Query(query, id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var lesson models.Lesson
-		err := rows.Scan(&lesson.Id, &lesson.Name, &lesson.Content)
-		if err != nil {
-			return nil, err
-		}
-		courseLessons = append(courseLessons, lesson)
-	}
-
-	return courseLessons, nil
+	return &c, nil
 }
 
 func (r *courseRepo) EnrollInClass(classId int, userId int) error {

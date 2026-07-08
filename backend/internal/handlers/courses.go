@@ -40,34 +40,19 @@ func (h *courseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	course, err := h.srvc.GetById(id)
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "incorrect user id")
+		return
+	}
+
+	course, err := h.srvc.GetById(id, userId)
 	if err != nil {
 		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(course)
-	if err != nil {
-		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
-	}
-}
-
-func (h *courseHandler) GetCourseLessons(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		w.Write([]byte(`{"error": "provide number"}`))
-		return
-	}
-
-	lessons, err := h.srvc.GetCourseLessons(id)
-	if err != nil {
-		jsonResponse(w, http.StatusNotFound, err.Error())
-		return
-	}
-
-	err = json.NewEncoder(w).Encode(&lessons)
 	if err != nil {
 		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
 	}

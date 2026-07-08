@@ -36,9 +36,9 @@ func (s *courseService) Get() ([]models.Course, error) {
 	return courses, nil
 }
 
-func (s *courseService) GetById(id int) (*models.Course, error) {
+func (s *courseService) GetById(id, userId int) (*models.CourseDetails, error) {
 	ctx := context.Background()
-	var c models.Course
+	var c models.CourseDetails
 	key := "course-" + strconv.Itoa(id)
 
 	value, err := s.cache.Get(ctx, key)
@@ -48,7 +48,7 @@ func (s *courseService) GetById(id int) (*models.Course, error) {
 		}
 	}
 
-	course, err := s.repo.GetCourseById(id)
+	course, err := s.repo.GetCourseById(id, userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, NotFoundErr
 	} else if err != nil {
@@ -67,19 +67,6 @@ func (s *courseService) GetById(id int) (*models.Course, error) {
 	}
 
 	return course, nil
-}
-
-func (s *courseService) GetCourseLessons(id int) ([]models.Lesson, error) {
-	lessons, err := s.repo.GetCourseLessons(id)
-
-	if err != nil {
-		log.Println(err)
-		return nil, internalErr
-	} else if lessons == nil {
-		return nil, NotFoundErr
-	}
-
-	return lessons, nil
 }
 
 func (s *courseService) EnrollInClass(classId int, userId int) error {

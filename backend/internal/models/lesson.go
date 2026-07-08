@@ -12,11 +12,10 @@ type Lesson struct {
 }
 
 type LessonDetail struct {
-	Id         int    `json:"id" redis:"id"`
-	Name       string `json:"name" redis:"name"`
-	Content    string `json:"content" redis:"content"`
-	CourseName string `json:"course_name" redis:"course_name"`
-	CourseId   int    `json:"course_id" redis:"course_id"`
+	Lesson
+	CourseName string `json:"course_name"`
+	CourseId   int    `json:"course_id"`
+	Completed  *bool  `json:"completed,omitempty"`
 }
 
 type Answer struct {

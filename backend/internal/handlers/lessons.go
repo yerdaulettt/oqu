@@ -26,7 +26,13 @@ func (h *lessonHandler) GetLessonById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lesson, err := h.srvc.GetLesson(id)
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "incorrect user id")
+		return
+	}
+
+	lesson, err := h.srvc.GetLesson(id, userId)
 	if err != nil {
 		jsonResponse(w, http.StatusInternalServerError, err.Error())
 		return

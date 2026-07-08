@@ -9,14 +9,13 @@ import (
 
 type CourseRepository interface {
 	GetCourses() ([]models.Course, error)
-	GetCourseById(id int) (*models.Course, error)
-	GetCourseLessons(id int) ([]models.Lesson, error)
+	GetCourseById(id, userId int) (*models.CourseDetails, error)
 	EnrollInClass(classId int, userId int) error
 	ResetRating(courseId, userId int) error
 }
 
 type LessonRepository interface {
-	GetLesson(id int) (*models.LessonDetail, error)
+	GetLesson(id, userId int) (*models.LessonDetail, error)
 	GetComments(lessonId, userId int) ([]models.Comment, error)
 	PostComment(lessonId int, userId int, c *models.Comment) (bool, error)
 	Score(lessonId, userId int) error
