@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"oqu/internal/app"
+	"oqu/internal/auth"
 	"oqu/internal/configs"
 	"oqu/internal/repository/postgresql"
 	"oqu/internal/repository/rediscache"
@@ -17,8 +18,8 @@ func main() {
 		panic(err)
 	}
 
-	cfg := configs.NewPostgresqlConfig()
-	db := postgresql.NewPostgresqlConn(cfg)
+	postgresqlCfg := configs.NewPostgresqlConfig()
+	db := postgresql.NewPostgresqlConn(postgresqlCfg)
 	defer db.Close()
 
 	cache := redis.NewClient(&redis.Options{
@@ -31,5 +32,8 @@ func main() {
 
 	cacheRepo := rediscache.NewCacheRepository(cache)
 
-	app.Bastau(db, cacheRepo)
+	jwtCfg := configs.NewJwtConfig()
+	jwtService := auth.NewJwtAuth(jwtCfg.Secret, jwtCfg.AccessTtl, jwtCfg.RefreshTtl)
+
+	app.Bastau(db, cacheRepo, jwtService)
 }

@@ -2,14 +2,12 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"slices"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
+	"oqu/internal/auth"
 )
 
 func unauthResponse(w http.ResponseWriter, msg string) {
@@ -18,46 +16,29 @@ func unauthResponse(w http.ResponseWriter, msg string) {
 	w.Write([]byte(`{"error": "` + msg + `"}`))
 }
 
-func JWTAuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := r.Header.Get("Authorization")
+func JWTAuthMiddleware(jwtService *auth.JwtAuth) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenString := r.Header.Get("Authorization")
 
-		if tokenString == "" {
-			unauthResponse(w, "no token found")
-			return
-		}
-		tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
-
-		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, errors.New("invalid token")
+			if tokenString == "" {
+				unauthResponse(w, "no token found")
+				return
 			}
-			return []byte(os.Getenv("JWT_SECRET")), nil
+			tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+
+			claims, err := jwtService.ParseToken(tokenString)
+			if err != nil {
+				unauthResponse(w, err.Error())
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), "role", claims.Role)
+			ctx = context.WithValue(ctx, "userId", claims.UserId)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
-
-		if err != nil || !token.Valid {
-			unauthResponse(w, err.Error())
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			unauthResponse(w, "error")
-			return
-		}
-
-		role, ok := claims["role"].(string)
-		if !ok {
-			unauthResponse(w, "incorrect claim")
-			return
-		}
-		userId := int(claims["userId"].(float64))
-
-		ctx := context.WithValue(r.Context(), "role", role)
-		ctx = context.WithValue(ctx, "userId", userId)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+	}
 }
 
 func Role(requiredRoles ...string) func(http.Handler) http.Handler {

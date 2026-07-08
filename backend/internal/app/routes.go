@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"oqu/internal/auth"
 	"oqu/internal/handlers"
 	"oqu/internal/middleware"
 	"oqu/internal/repository"
@@ -13,11 +14,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func authRouter(db *sql.DB) http.Handler {
+func authRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 	r := chi.NewRouter()
 
 	authR := postgresql.NewAuthRepo(db)
-	authS := service.NewAuthService(authR)
+	authS := service.NewAuthService(authR, jwtService)
 	authH := handlers.NewAuthHandler(authS)
 
 	r.Post("/register", authH.Register)
@@ -26,25 +27,26 @@ func authRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func courseRouter(db *sql.DB, cache repository.CacheRepository) http.Handler {
+func courseRouter(db *sql.DB, cache repository.CacheRepository, jwtService *auth.JwtAuth) http.Handler {
 	r := chi.NewRouter()
 
 	courseR := postgresql.NewCourseRepo(db)
 	courseS := service.NewCourseService(courseR, cache)
 	courseH := handlers.NewCourseHandler(courseS)
 
+	r.Use(middleware.JWTAuthMiddleware(jwtService))
 	r.HandleFunc("GET /", courseH.Get)
-	r.With(middleware.JWTAuthMiddleware).HandleFunc("GET /{id}", courseH.GetById)
-	r.With(middleware.JWTAuthMiddleware, middleware.Role("user")).HandleFunc("POST /{id}/enroll", courseH.EnrollInClass)
-	r.With(middleware.JWTAuthMiddleware, middleware.Role("user")).HandleFunc("POST /{id}/reset", courseH.ResetRating)
+	r.HandleFunc("GET /{id}", courseH.GetById)
+	r.With(middleware.Role("user")).HandleFunc("POST /{id}/enroll", courseH.EnrollInClass)
+	r.With(middleware.Role("user")).HandleFunc("POST /{id}/reset", courseH.ResetRating)
 
 	return r
 }
 
-func lessonRouter(db *sql.DB, cache repository.CacheRepository) http.Handler {
+func lessonRouter(db *sql.DB, cache repository.CacheRepository, jwtService *auth.JwtAuth) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.JWTAuthMiddleware)
+	r.Use(middleware.JWTAuthMiddleware(jwtService))
 
 	lessonR := postgresql.NewLessonRepo(db)
 	lessonS := service.NewLessonService(lessonR, cache)
@@ -61,10 +63,10 @@ func lessonRouter(db *sql.DB, cache repository.CacheRepository) http.Handler {
 	return r
 }
 
-func commentRouter(db *sql.DB) http.Handler {
+func commentRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.JWTAuthMiddleware)
+	r.Use(middleware.JWTAuthMiddleware(jwtService))
 
 	commentR := postgresql.NewCommentRepo(db)
 	commentS := service.NewCommentService(commentR)
@@ -76,10 +78,10 @@ func commentRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func adminRouter(db *sql.DB) http.Handler {
+func adminRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.JWTAuthMiddleware)
+	r.Use(middleware.JWTAuthMiddleware(jwtService))
 	r.Use(middleware.Role("admin"))
 
 	adminR := postgresql.NewAdminRepo(db)
@@ -96,10 +98,10 @@ func adminRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func moderatorRouter(db *sql.DB) http.Handler {
+func moderatorRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.JWTAuthMiddleware)
+	r.Use(middleware.JWTAuthMiddleware(jwtService))
 	r.Use(middleware.Role("moderator"))
 
 	moderatorR := postgresql.NewModeratorRepo(db)
@@ -112,10 +114,10 @@ func moderatorRouter(db *sql.DB) http.Handler {
 	return r
 }
 
-func userRouter(db *sql.DB, cache repository.CacheRepository) http.Handler {
+func userRouter(db *sql.DB, cache repository.CacheRepository, jwtService *auth.JwtAuth) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.JWTAuthMiddleware)
+	r.Use(middleware.JWTAuthMiddleware(jwtService))
 
 	userR := postgresql.NewUserRepo(db)
 	userS := service.NewUserService(userR, cache)

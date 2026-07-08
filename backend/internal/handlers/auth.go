@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -56,6 +57,17 @@ func (h *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := h.srvc.Login(&userLog)
+	token, err := h.srvc.Login(&userLog)
+	if errors.Is(err, service.NotFoundErr) {
+		jsonResponse(w, http.StatusNotFound, err.Error())
+		return
+	} else if errors.Is(err, service.IncorrectPassword) {
+		jsonResponse(w, http.StatusBadRequest, err.Error())
+		return
+	} else if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	w.Write([]byte(`{"access": "` + token + `"}`))
 }

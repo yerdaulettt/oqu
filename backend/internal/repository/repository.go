@@ -31,7 +31,7 @@ type CommentRepository interface {
 
 type AuthRepository interface {
 	Register(u *models.UserRegister) (int, error)
-	Login(u *models.UserLogin) (string, error)
+	GetUser(username string) (*models.UserResponseDB, error)
 }
 
 type AdminRepository interface {
