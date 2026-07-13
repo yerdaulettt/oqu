@@ -91,8 +91,11 @@ type AdminTestView struct {
 }
 
 type CorrectAnswers struct {
-	QuestionId      int
-	CorrectOptionId int
+	QuestionId     int    `json:"question_id"`
+	Question       string `json:"question"`
+	CorrectChoice  int    `json:"correct_choice"`
+	SelectedChoice int    `json:"selected_choice"`
+	IsCorrect      bool   `json:"is_correct"`
 }
 
 type SubmitTest struct {
@@ -101,6 +104,7 @@ type SubmitTest struct {
 }
 
 type ResultsOfTest struct {
-	TotalQuestions int `json:"total_questions"`
-	Point          int `json:"point"`
+	TotalQuestions int              `json:"total_questions"`
+	Point          int              `json:"points"`
+	Results        []CorrectAnswers `json:"results"`
 }

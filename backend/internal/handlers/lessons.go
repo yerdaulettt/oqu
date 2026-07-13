@@ -182,6 +182,12 @@ func (h *lessonHandler) SubmitTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "incorrect user")
+		return
+	}
+
 	var st []models.SubmitTest
 	err = json.NewDecoder(r.Body).Decode(&st)
 	if err != nil {
@@ -189,7 +195,7 @@ func (h *lessonHandler) SubmitTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.srvc.SubmitTest(lessonId, st)
+	result, err := h.srvc.SubmitTest(lessonId, userId, st)
 	if err != nil {
 		jsonResponse(w, http.StatusInternalServerError, err.Error())
 		return

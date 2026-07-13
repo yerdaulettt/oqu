@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"sort"
 	"strconv"
 	"time"
 
@@ -128,24 +129,45 @@ func (s *lessonService) GetTest(lessonId int) ([]models.StudentTestView, error) 
 	return lessonTest, nil
 }
 
-func (s *lessonService) SubmitTest(lessonId int, st []models.SubmitTest) (*models.ResultsOfTest, error) {
+func (s *lessonService) SubmitTest(lessonId, userId int, st []models.SubmitTest) (*models.ResultsOfTest, error) {
+	isCompleted := s.repo.IsTestCompleted(lessonId, userId)
+	if isCompleted {
+		return nil, AlreadyCompleted
+	}
+
 	correctAnswers, err := s.repo.GetCorrectAnswers(lessonId)
 	if err != nil {
 		log.Println(err)
 		return nil, internalErr
 	}
 
-	if len(correctAnswers) != len(st) {
+	totalQuestions := len(correctAnswers)
+
+	if totalQuestions != len(st) {
 		return nil, incorrectTestSubmit
 	}
 
-	totalQuestions := len(correctAnswers)
+	sort.Slice(st, func(i, j int) bool {
+		return st[i].QuestionId < st[j].QuestionId
+	})
+
 	points := 0
 	for i := range totalQuestions {
-		if correctAnswers[i].QuestionId == st[i].QuestionId && correctAnswers[i].CorrectOptionId == st[i].SelectedChoice {
+		if correctAnswers[i].QuestionId == st[i].QuestionId && correctAnswers[i].CorrectChoice == st[i].SelectedChoice {
 			points += 1
+			correctAnswers[i].IsCorrect = true
+		}
+
+		correctAnswers[i].SelectedChoice = st[i].SelectedChoice
+	}
+
+	if completed := ((points * 100) / totalQuestions) > 90; completed {
+		err = s.repo.SubmitTest(lessonId, userId, completed, st)
+		if err != nil {
+			log.Println(err)
+			return nil, err
 		}
 	}
 
-	return &models.ResultsOfTest{TotalQuestions: totalQuestions, Point: points}, nil
+	return &models.ResultsOfTest{TotalQuestions: totalQuestions, Point: points, Results: correctAnswers}, nil
 }

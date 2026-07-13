@@ -16,7 +16,7 @@ type LessonService interface {
 	Score(lessonId, userId int) error
 	ResetScore(lessonId, userId int) error
 	GetTest(lessonId int) ([]models.StudentTestView, error)
-	SubmitTest(lessonId int, st []models.SubmitTest) (*models.ResultsOfTest, error)
+	SubmitTest(lessonId, userId int, st []models.SubmitTest) (*models.ResultsOfTest, error)
 }
 
 type CommentService interface {

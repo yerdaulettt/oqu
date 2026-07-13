@@ -22,6 +22,8 @@ type LessonRepository interface {
 	ResetScore(lessonId, userId int) error
 	GetTest(lessonId int) ([]models.StudentTestView, error)
 	GetCorrectAnswers(lessonId int) ([]models.CorrectAnswers, error)
+	SubmitTest(lessonId, userId int, completed bool, st []models.SubmitTest) error
+	IsTestCompleted(lessonId, userId int) bool
 }
 
 type CommentRepository interface {
