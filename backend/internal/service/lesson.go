@@ -95,20 +95,8 @@ func (s *lessonService) ResetScore(lessonId, userId int) error {
 	return nil
 }
 
-func (s *lessonService) GetTest(lessonId, userId int) ([]models.StudentTestView, error) {
-	ctx := context.Background()
-	var lt []models.StudentTestView
-
-	key := "lessontest-" + strconv.Itoa(lessonId)
-
-	value, err := s.cache.Get(ctx, key)
-	if err == nil && value != nil {
-		if err := json.Unmarshal(value, &lt); err == nil {
-			return lt, nil
-		}
-	}
-
-	lessonTest, err := s.repo.GetTest(lessonId, userId)
+func (s *lessonService) GetTest(lessonId, userId int) (*models.StudentTestView, error) {
+	questions, err := s.repo.GetTest(lessonId, userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, NotFoundErr
 	} else if err != nil {
@@ -116,14 +104,22 @@ func (s *lessonService) GetTest(lessonId, userId int) ([]models.StudentTestView,
 		return nil, internalErr
 	}
 
-	result, err := json.Marshal(lessonTest)
-	if err != nil {
-		log.Println("marshal", err)
+	totalQuestions := len(questions)
+	points := 0
+
+	for _, q := range questions {
+		if q.IsCorrect != nil && *q.IsCorrect == true {
+			points++
+		}
 	}
 
-	err = s.cache.Set(ctx, key, result, 5*time.Minute)
-	if err != nil {
-		log.Println("set", err)
+	completed := ((points * 100) / totalQuestions) > 90
+
+	lessonTest := &models.StudentTestView{
+		TotalQuestions: totalQuestions,
+		Point:          points,
+		Completed:      completed,
+		Questions:      questions,
 	}
 
 	return lessonTest, nil
@@ -171,7 +167,9 @@ func (s *lessonService) SubmitTest(lessonId, userId int, st []models.SubmitTest)
 		correctAnswers[i].SelectedChoice = st[i].SelectedChoice
 	}
 
-	if completed := ((points * 100) / totalQuestions) > 90; completed {
+	completed := ((points * 100) / totalQuestions) > 90
+
+	if completed {
 		err = s.repo.SubmitTest(lessonId, userId, completed, st)
 		if err != nil {
 			log.Println(err)
@@ -179,5 +177,10 @@ func (s *lessonService) SubmitTest(lessonId, userId int, st []models.SubmitTest)
 		}
 	}
 
-	return &models.ResultsOfTest{TotalQuestions: totalQuestions, Point: points, Results: correctAnswers}, nil
+	return &models.ResultsOfTest{
+		TotalQuestions: totalQuestions,
+		Point:          points,
+		Completed:      completed,
+		Results:        correctAnswers,
+	}, nil
 }

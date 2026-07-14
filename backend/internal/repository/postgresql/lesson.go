@@ -25,12 +25,13 @@ func (r *lessonRepo) GetLesson(id, userId int) (*models.LessonDetail, error) {
 
 	select
 		l.id, l.name, l.content, c.name as course_name, c.id as course_id,
-		case when (select role from active_user) = 'user' then coalesce(r.completed, false) end as completed
+		case when (select role from active_user) = 'user' then coalesce(r.completed, false) end as completed,
+		case when lt.id is not null then true else false end as has_test
 	from (lessons as l left join rating as r on l.id = r.lesson_id and r.user_id = (select id from active_user))
-	join courses as c on l.course_id = c.id where l.id = $2`
+	join courses as c on l.course_id = c.id left join lesson_tests as lt on l.id = lt.lesson_id where l.id = $2`
 
 	var l models.LessonDetail
-	err := r.db.QueryRow(query, userId, id).Scan(&l.Id, &l.Name, &l.Content, &l.CourseName, &l.CourseId, &l.Completed)
+	err := r.db.QueryRow(query, userId, id).Scan(&l.Id, &l.Name, &l.Content, &l.CourseName, &l.CourseId, &l.Completed, &l.HasTest)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +107,7 @@ func (r *lessonRepo) ResetScore(lessonId, userId int) error {
 	return nil
 }
 
-func (r *lessonRepo) GetTest(lessonId, userId int) ([]models.StudentTestView, error) {
+func (r *lessonRepo) GetTest(lessonId, userId int) ([]models.StudentTestQuestions, error) {
 	query := `
 	with correct_answers as
 		(select a.question_id, a.id from (lesson_tests as lt join questions as q on lt.id = q.test_id and lt.lesson_id = $1)
@@ -121,7 +122,7 @@ func (r *lessonRepo) GetTest(lessonId, userId int) ([]models.StudentTestView, er
 		t.answer_options from
 	(tests as t join correct_answers as ca on t.id = ca.question_id) left join test_submits as ts on t.id = ts.question_id and ts.user_id = $3`
 
-	var tests []models.StudentTestView
+	var tests []models.StudentTestQuestions
 
 	rows, err := r.db.Query(query, lessonId, lessonId, userId)
 	if err != nil {
@@ -130,7 +131,7 @@ func (r *lessonRepo) GetTest(lessonId, userId int) ([]models.StudentTestView, er
 	defer rows.Close()
 
 	for rows.Next() {
-		var test models.StudentTestView
+		var test models.StudentTestQuestions
 		err := rows.Scan(&test.QuestionId, &test.Question, &test.SelectedChoice, &test.CorrectChoice, &test.IsCorrect, &test.AnswerOptions)
 		if err != nil {
 			return nil, err

@@ -16,6 +16,7 @@ type LessonDetail struct {
 	CourseName string `json:"course_name"`
 	CourseId   int    `json:"course_id"`
 	Completed  *bool  `json:"completed,omitempty"`
+	HasTest    bool   `json:"has_test"`
 }
 
 type Answer struct {
@@ -62,13 +63,20 @@ func (a *AnswerOptionsList) Scan(src any) error {
 	return json.Unmarshal(source, a)
 }
 
-type StudentTestView struct {
+type StudentTestQuestions struct {
 	QuestionId     int               `json:"question_id"`
 	Question       string            `json:"question"`
 	CorrectChoice  *int              `json:"correct_choice,omitempty"`
 	SelectedChoice *int              `json:"selected_choice,omitempty"`
 	IsCorrect      *bool             `json:"is_correct,omitempty"`
 	AnswerOptions  AnswerOptionsList `json:"answer_options"`
+}
+
+type StudentTestView struct {
+	TotalQuestions int                    `json:"total_questions"`
+	Point          int                    `json:"point"`
+	Completed      bool                   `json:"completed"`
+	Questions      []StudentTestQuestions `json:"questions"`
 }
 
 type AdminAnswersList []Answer
@@ -109,5 +117,6 @@ type SubmitTest struct {
 type ResultsOfTest struct {
 	TotalQuestions int              `json:"total_questions"`
 	Point          int              `json:"points"`
+	Completed      bool             `json:"completed"`
 	Results        []CorrectAnswers `json:"results"`
 }

@@ -20,7 +20,7 @@ type LessonRepository interface {
 	PostComment(lessonId int, userId int, c *models.Comment) (bool, error)
 	Score(lessonId, userId int) error
 	ResetScore(lessonId, userId int) error
-	GetTest(lessonId, userId int) ([]models.StudentTestView, error)
+	GetTest(lessonId, userId int) ([]models.StudentTestQuestions, error)
 	ResetTest(lessonId, userId int) error
 	GetCorrectAnswers(lessonId int) ([]models.CorrectAnswers, error)
 	SubmitTest(lessonId, userId int, completed bool, st []models.SubmitTest) error

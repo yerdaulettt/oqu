@@ -15,7 +15,7 @@ type LessonService interface {
 	PostComment(lessonId int, userId int, c *models.Comment) bool
 	Score(lessonId, userId int) error
 	ResetScore(lessonId, userId int) error
-	GetTest(lessonId, userId int) ([]models.StudentTestView, error)
+	GetTest(lessonId, userId int) (*models.StudentTestView, error)
 	ResetTest(lessonId, userId int) error
 	SubmitTest(lessonId, userId int, st []models.SubmitTest) (*models.ResultsOfTest, error)
 }
