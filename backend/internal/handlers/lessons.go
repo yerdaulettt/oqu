@@ -160,7 +160,13 @@ func (h *lessonHandler) GetTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	test, err := h.srvc.GetTest(lessonId)
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "Incorrect user id")
+		return
+	}
+
+	test, err := h.srvc.GetTest(lessonId, userId)
 	if err != nil {
 		jsonResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -171,6 +177,30 @@ func (h *lessonHandler) GetTest(w http.ResponseWriter, r *http.Request) {
 		jsonResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+}
+
+func (h *lessonHandler) ResetTest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, "Incorrect user id")
+		return
+	}
+
+	err = h.srvc.ResetTest(lessonId, userId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, "Deleted")
 }
 
 func (h *lessonHandler) SubmitTest(w http.ResponseWriter, r *http.Request) {

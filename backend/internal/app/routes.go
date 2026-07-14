@@ -59,6 +59,7 @@ func lessonRouter(db *sql.DB, cache repository.CacheRepository, jwtService *auth
 	r.With(middleware.Role("user")).HandleFunc("POST /{id}/reset", lessonH.ResetScore)
 	r.HandleFunc("GET /{id}/test", lessonH.GetTest)
 	r.With(middleware.Role("user")).HandleFunc("POST /{id}/test", lessonH.SubmitTest)
+	r.With(middleware.Role("user")).HandleFunc("DELETE /{id}/test", lessonH.ResetTest)
 
 	return r
 }
@@ -94,6 +95,7 @@ func adminRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 	r.HandleFunc("POST /courses/{id}/lessons", adminH.AddLesson)
 	r.HandleFunc("POST /lessons/{id}/test", adminH.AddTest)
 	r.HandleFunc("GET /lessons/{id}/test", adminH.GetTest)
+	r.HandleFunc("DELETE /lessons/{id}/test", adminH.DeleteTest)
 
 	return r
 }

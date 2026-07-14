@@ -15,7 +15,8 @@ type LessonService interface {
 	PostComment(lessonId int, userId int, c *models.Comment) bool
 	Score(lessonId, userId int) error
 	ResetScore(lessonId, userId int) error
-	GetTest(lessonId int) ([]models.StudentTestView, error)
+	GetTest(lessonId, userId int) ([]models.StudentTestView, error)
+	ResetTest(lessonId, userId int) error
 	SubmitTest(lessonId, userId int, st []models.SubmitTest) (*models.ResultsOfTest, error)
 }
 
@@ -36,6 +37,7 @@ type AdminService interface {
 	AddLesson(courseId int, l *models.Lesson) (int, error)
 	AddTest(lessonId int, t []*models.NewTest) error
 	GetTest(lessonId int) ([]models.AdminTestView, error)
+	DeleteTest(lessonId int) error
 }
 
 type ModeratorService interface {

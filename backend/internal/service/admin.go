@@ -74,3 +74,13 @@ func (s *adminService) GetTest(lessonId int) ([]models.AdminTestView, error) {
 
 	return tests, nil
 }
+
+func (s *adminService) DeleteTest(lessonId int) error {
+	err := s.repo.DeleteTest(lessonId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	return nil
+}

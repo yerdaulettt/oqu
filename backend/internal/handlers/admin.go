@@ -144,3 +144,19 @@ func (h *adminHandler) GetTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *adminHandler) DeleteTest(w http.ResponseWriter, r *http.Request) {
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, "Provide number")
+		return
+	}
+
+	err = h.srvc.DeleteTest(lessonId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, "Deleted")
+}

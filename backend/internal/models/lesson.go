@@ -63,9 +63,12 @@ func (a *AnswerOptionsList) Scan(src any) error {
 }
 
 type StudentTestView struct {
-	QuestionId    int               `json:"question_id"`
-	Question      string            `json:"question"`
-	AnswerOptions AnswerOptionsList `json:"answer_options"`
+	QuestionId     int               `json:"question_id"`
+	Question       string            `json:"question"`
+	CorrectChoice  *int              `json:"correct_choice,omitempty"`
+	SelectedChoice *int              `json:"selected_choice,omitempty"`
+	IsCorrect      *bool             `json:"is_correct,omitempty"`
+	AnswerOptions  AnswerOptionsList `json:"answer_options"`
 }
 
 type AdminAnswersList []Answer

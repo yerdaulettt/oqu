@@ -93,24 +93,36 @@ func addTestHelper(tests []*models.NewTest) (string, []any) {
 	return query, params
 }
 
-func (r *adminRepo) AddTest(lessonId int, t []*models.NewTest) error {
-	query := `insert into questions (text, lesson_id) values `
+func (r *adminRepo) AddTest(lessonId int, nt []*models.NewTest) error {
+	t, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer t.Rollback()
+
+	var testId int
+	err = t.QueryRow(`insert into lesson_tests (lesson_id) values ($1) returning id`, lessonId).Scan(&testId)
+	if err != nil {
+		return err
+	}
+
+	query := `insert into questions (text, test_id) values `
 	cnt := 1
 	params := []any{}
 
-	for i, q := range t {
+	for i, q := range nt {
 		query += `($` + strconv.Itoa(cnt) + `, $` + strconv.Itoa(cnt+1) + `)`
 		cnt += 2
-		params = append(params, q.Question, lessonId)
+		params = append(params, q.Question, testId)
 
-		if i+1 == len(t) {
+		if i+1 == len(nt) {
 			query += ` returning id;`
 		} else {
 			query += `, `
 		}
 	}
 
-	rows, err := r.db.Query(query, params...)
+	rows, err := t.Query(query, params...)
 	if err != nil {
 		return err
 	}
@@ -123,14 +135,18 @@ func (r *adminRepo) AddTest(lessonId int, t []*models.NewTest) error {
 		if err != nil {
 			return err
 		}
-		t[cnt].Id = id
+		nt[cnt].Id = id
 		cnt += 1
 	}
 
-	query, params = addTestHelper(t)
+	query, params = addTestHelper(nt)
 
-	_, err = r.db.Exec(query, params...)
+	_, err = t.Exec(query, params...)
 	if err != nil {
+		return err
+	}
+
+	if err := t.Commit(); err != nil {
 		return err
 	}
 
@@ -138,8 +154,10 @@ func (r *adminRepo) AddTest(lessonId int, t []*models.NewTest) error {
 }
 
 func (r *adminRepo) GetTest(lessonId int) ([]models.AdminTestView, error) {
-	query := `select q.id, q.text, json_agg(json_build_object('text', a.text, 'is_correct', a.is_correct)) as answer_options from
-	questions as q join answers as a on q.id = a.question_id where q.lesson_id = $1 group by q.id`
+	query := `
+	select q.id, q.text, json_agg(json_build_object('text', a.text, 'is_correct', a.is_correct)) as answer_options
+	from (lesson_tests as lt join questions as q on lt.id = q.test_id and lt.lesson_id = $1)
+	join answers as a on q.id = a.question_id group by q.id`
 
 	var adminTests []models.AdminTestView
 	rows, err := r.db.Query(query, lessonId)
@@ -158,4 +176,13 @@ func (r *adminRepo) GetTest(lessonId int) ([]models.AdminTestView, error) {
 	}
 
 	return adminTests, nil
+}
+
+func (r *adminRepo) DeleteTest(lessonId int) error {
+	_, err := r.db.Exec(`delete from lesson_tests where lesson_id = $1`, lessonId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

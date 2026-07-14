@@ -106,15 +106,24 @@ func (r *lessonRepo) ResetScore(lessonId, userId int) error {
 	return nil
 }
 
-func (r *lessonRepo) GetTest(lessonId int) ([]models.StudentTestView, error) {
+func (r *lessonRepo) GetTest(lessonId, userId int) ([]models.StudentTestView, error) {
 	query := `
-	select q.id, q.text, json_agg(json_build_object('answer_id', a.id, 'text', a.text)) as answer_options from
-	(lesson_tests as lt join questions as q on lt.id = q.test_id and lt.lesson_id = $1)
-	join answers as a on q.id = a.question_id group by q.id`
+	with correct_answers as
+		(select a.question_id, a.id from (lesson_tests as lt join questions as q on lt.id = q.test_id and lt.lesson_id = $1)
+		join answers as a on q.id = a.question_id and a.is_correct = true),
+	tests as
+		(select q.id, q.text, json_agg(json_build_object('answer_id', a.id, 'text', a.text)) as answer_options from
+		(lesson_tests as lt join questions as q on lt.id = q.test_id and lt.lesson_id = $2) join answers as a on q.id = a.question_id group by q.id)
+	
+	select
+		t.id, t.text, ts.selected_choice, case when ts.selected_choice is not null then ca.id end as correct_choice,
+		case when ts.selected_choice = ca.id then true when ts.selected_choice <> ca.id then false end as is_correct,
+		t.answer_options from
+	(tests as t join correct_answers as ca on t.id = ca.question_id) left join test_submits as ts on t.id = ts.question_id and ts.user_id = $3`
 
 	var tests []models.StudentTestView
 
-	rows, err := r.db.Query(query, lessonId)
+	rows, err := r.db.Query(query, lessonId, lessonId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +131,7 @@ func (r *lessonRepo) GetTest(lessonId int) ([]models.StudentTestView, error) {
 
 	for rows.Next() {
 		var test models.StudentTestView
-		err := rows.Scan(&test.QuestionId, &test.Question, &test.AnswerOptions)
+		err := rows.Scan(&test.QuestionId, &test.Question, &test.SelectedChoice, &test.CorrectChoice, &test.IsCorrect, &test.AnswerOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -130,6 +139,36 @@ func (r *lessonRepo) GetTest(lessonId int) ([]models.StudentTestView, error) {
 	}
 
 	return tests, nil
+}
+
+func (r *lessonRepo) ResetTest(lessonId, userId int) error {
+	t, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer t.Rollback()
+
+	var testId int
+	err = t.QueryRow(`select id from lesson_tests where lesson_id = $1`, lessonId).Scan(&testId)
+	if err != nil {
+		return err
+	}
+
+	_, err = t.Exec(`delete from test_submits where test_id = $1 and user_id = $2`, testId, userId)
+	if err != nil {
+		return err
+	}
+
+	_, err = t.Exec(`delete from test_results where test_id = $1 and user_id = $2`, testId, userId)
+	if err != nil {
+		return err
+	}
+
+	if err := t.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *lessonRepo) GetCorrectAnswers(lessonId int) ([]models.CorrectAnswers, error) {
@@ -208,7 +247,7 @@ func (r *lessonRepo) SubmitTest(lessonId, userId int, completed bool, st []model
 func (r *lessonRepo) IsTestCompleted(lessonId, userId int) bool {
 	query := `
 	select coalesce(tr.completed, false) from lesson_tests as lt left join
-	test_results as tr on lt.id = tr.test_id and lt.lesson_id = $1 and tr.user_id = $2`
+	test_results as tr on lt.id = tr.test_id where lt.lesson_id = $1 and tr.user_id = $2`
 
 	var completed bool
 	err := r.db.QueryRow(query, lessonId, userId).Scan(&completed)

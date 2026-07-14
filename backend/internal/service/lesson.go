@@ -24,16 +24,16 @@ func NewLessonService(r repository.LessonRepository, c repository.CacheRepositor
 }
 
 func (s *lessonService) GetLesson(id, userId int) (*models.LessonDetail, error) {
-	// ctx := context.Background()
-	// var l models.LessonDetail
-	// key := "lesson-" + strconv.Itoa(id)
+	ctx := context.Background()
+	var l models.LessonDetail
+	key := "lesson-" + strconv.Itoa(id)
 
-	// value, err := s.cache.Get(ctx, key)
-	// if err == nil && value != nil {
-	// 	if err := json.Unmarshal(value, &l); err == nil {
-	// 		return &l, nil
-	// 	}
-	// }
+	value, err := s.cache.Get(ctx, key)
+	if err == nil && value != nil {
+		if err := json.Unmarshal(value, &l); err == nil {
+			return &l, nil
+		}
+	}
 
 	lesson, err := s.repo.GetLesson(id, userId)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -43,15 +43,15 @@ func (s *lessonService) GetLesson(id, userId int) (*models.LessonDetail, error) 
 		return nil, internalErr
 	}
 
-	// result, err := json.Marshal(lesson)
-	// if err != nil {
-	// 	log.Println("marshal", err)
-	// }
+	result, err := json.Marshal(lesson)
+	if err != nil {
+		log.Println("marshal", err)
+	}
 
-	// err = s.cache.Set(ctx, key, result, 5*time.Minute)
-	// if err != nil {
-	// 	log.Println("set", err)
-	// }
+	err = s.cache.Set(ctx, key, result, 5*time.Minute)
+	if err != nil {
+		log.Println("set", err)
+	}
 
 	return lesson, nil
 }
@@ -95,7 +95,7 @@ func (s *lessonService) ResetScore(lessonId, userId int) error {
 	return nil
 }
 
-func (s *lessonService) GetTest(lessonId int) ([]models.StudentTestView, error) {
+func (s *lessonService) GetTest(lessonId, userId int) ([]models.StudentTestView, error) {
 	ctx := context.Background()
 	var lt []models.StudentTestView
 
@@ -108,7 +108,7 @@ func (s *lessonService) GetTest(lessonId int) ([]models.StudentTestView, error) 
 		}
 	}
 
-	lessonTest, err := s.repo.GetTest(lessonId)
+	lessonTest, err := s.repo.GetTest(lessonId, userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, NotFoundErr
 	} else if err != nil {
@@ -127,6 +127,16 @@ func (s *lessonService) GetTest(lessonId int) ([]models.StudentTestView, error) 
 	}
 
 	return lessonTest, nil
+}
+
+func (s *lessonService) ResetTest(lessonId, userId int) error {
+	err := s.repo.ResetTest(lessonId, userId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	return nil
 }
 
 func (s *lessonService) SubmitTest(lessonId, userId int, st []models.SubmitTest) (*models.ResultsOfTest, error) {
@@ -165,7 +175,7 @@ func (s *lessonService) SubmitTest(lessonId, userId int, st []models.SubmitTest)
 		err = s.repo.SubmitTest(lessonId, userId, completed, st)
 		if err != nil {
 			log.Println(err)
-			return nil, err
+			return nil, internalErr
 		}
 	}
 

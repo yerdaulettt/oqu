@@ -20,7 +20,8 @@ type LessonRepository interface {
 	PostComment(lessonId int, userId int, c *models.Comment) (bool, error)
 	Score(lessonId, userId int) error
 	ResetScore(lessonId, userId int) error
-	GetTest(lessonId int) ([]models.StudentTestView, error)
+	GetTest(lessonId, userId int) ([]models.StudentTestView, error)
+	ResetTest(lessonId, userId int) error
 	GetCorrectAnswers(lessonId int) ([]models.CorrectAnswers, error)
 	SubmitTest(lessonId, userId int, completed bool, st []models.SubmitTest) error
 	IsTestCompleted(lessonId, userId int) bool
@@ -41,8 +42,9 @@ type AdminRepository interface {
 	MakeCourse(c *models.Course) (int, error)
 	DeleteCourse(id int) (*models.Course, error)
 	AddLesson(courseId int, l *models.Lesson) (int, error)
-	AddTest(lessonId int, t []*models.NewTest) error
+	AddTest(lessonId int, nt []*models.NewTest) error
 	GetTest(lessonId int) ([]models.AdminTestView, error)
+	DeleteTest(lessonId int) error
 }
 
 type ModeratorRepository interface {
