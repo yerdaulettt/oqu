@@ -13,6 +13,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// @title Oqu REST API
 func main() {
 	if err := godotenv.Load(); err != nil {
 		panic(err)
