@@ -23,6 +23,7 @@ func authRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 
 	r.Post("/register", authH.Register)
 	r.Post("/login", authH.Login)
+	r.HandleFunc("/refresh", authH.Refresh)
 
 	return r
 }

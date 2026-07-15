@@ -27,7 +27,8 @@ type CommentService interface {
 
 type AuthService interface {
 	Register(u *models.UserRegister) int
-	Login(u *models.UserLogin) (string, error)
+	Login(u *models.UserLogin) (*models.Tokens, error)
+	Refresh(refresh string) (string, error)
 }
 
 type AdminService interface {

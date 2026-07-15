@@ -2,25 +2,22 @@ package auth
 
 import (
 	"errors"
+	"oqu/internal/models"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var (
-	incorrectToken = errors.New("Incorrect token")
-	expiredErr     = errors.New("Token expired")
+	IncorrectToken = errors.New("Incorrect token")
+	ExpiredErr     = errors.New("Token expired")
 )
 
 type claims struct {
 	jwt.RegisteredClaims
-	UserId int
-	Role   string
-}
-
-type pair struct {
-	Access  string `json:"access"`
-	Refresh string `json:"refresh"`
+	UserId    int
+	Role      string
+	TokenType string
 }
 
 type JwtAuth struct {
@@ -45,8 +42,9 @@ func (j *JwtAuth) newAccessToken(userId int, role string) (string, error) {
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(j.accessTtl)),
 		},
-		UserId: userId,
-		Role:   role,
+		UserId:    userId,
+		Role:      role,
+		TokenType: "access",
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
@@ -65,10 +63,11 @@ func (j *JwtAuth) newRefreshToken(userId int, role string) (string, error) {
 	c := claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(j.accessTtl)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(j.refreshTtl)),
 		},
-		UserId: userId,
-		Role:   role,
+		UserId:    userId,
+		Role:      role,
+		TokenType: "refresh",
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
@@ -81,7 +80,7 @@ func (j *JwtAuth) newRefreshToken(userId int, role string) (string, error) {
 	return tokenString, nil
 }
 
-func (j *JwtAuth) GenerateTokens(userId int, role string) (*pair, error) {
+func (j *JwtAuth) GenerateTokens(userId int, role string) (*models.Tokens, error) {
 	access, err := j.newAccessToken(userId, role)
 	if err != nil {
 		return nil, err
@@ -92,27 +91,45 @@ func (j *JwtAuth) GenerateTokens(userId int, role string) (*pair, error) {
 		return nil, err
 	}
 
-	return &pair{Access: access, Refresh: refresh}, nil
+	return &models.Tokens{Access: access, Refresh: refresh}, nil
 }
 
 func (j *JwtAuth) ParseToken(tokenString string) (*claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &claims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, incorrectToken
+			return nil, IncorrectToken
 		}
 		return j.secret, nil
 	}, jwt.WithExpirationRequired())
 
 	if errors.Is(err, jwt.ErrTokenExpired) {
-		return nil, expiredErr
+		return nil, ExpiredErr
 	} else if err != nil {
-		return nil, incorrectToken
+		return nil, IncorrectToken
 	}
 
 	c, ok := token.Claims.(*claims)
 	if !ok || !token.Valid {
-		return nil, incorrectToken
+		return nil, IncorrectToken
 	}
 
 	return c, nil
+}
+
+func (j *JwtAuth) RefreshAccessToken(refreshToken string) (string, error) {
+	refreshClaims, err := j.ParseToken(refreshToken)
+	if err != nil {
+		return "", IncorrectToken
+	}
+
+	if refreshClaims.TokenType != "refresh" {
+		return "", IncorrectToken
+	}
+
+	accessToken, err := j.newAccessToken(refreshClaims.UserId, refreshClaims.Role)
+	if err != nil {
+		return "", IncorrectToken
+	}
+
+	return accessToken, nil
 }

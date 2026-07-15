@@ -37,25 +37,35 @@ func (s *authService) Register(u *models.UserRegister) int {
 	return id
 }
 
-func (s *authService) Login(u *models.UserLogin) (string, error) {
+func (s *authService) Login(u *models.UserLogin) (*models.Tokens, error) {
 	userFromDB, err := s.repo.GetUser(u.Username)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", NotFoundErr
+		return nil, NotFoundErr
 	} else if err != nil {
 		log.Println(err)
-		return "", internalErr
+		return nil, internalErr
 	}
 
 	err = verifyPassword(userFromDB.PasswordHash, u.Password)
 	if err != nil {
-		return "", IncorrectPassword
+		return nil, IncorrectPassword
 	}
 
-	tokenString, err := s.jwtService.GenerateTokens(userFromDB.Id, userFromDB.Role)
+	tokens, err := s.jwtService.GenerateTokens(userFromDB.Id, userFromDB.Role)
 	if err != nil {
 		log.Println(err)
-		return "", internalErr
+		return nil, internalErr
 	}
 
-	return tokenString.Access, nil
+	return tokens, nil
+}
+
+func (s *authService) Refresh(refresh string) (string, error) {
+	access, err := s.jwtService.RefreshAccessToken(refresh)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+
+	return access, nil
 }

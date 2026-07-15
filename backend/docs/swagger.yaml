@@ -104,11 +104,41 @@ definitions:
       total_score:
         type: string
     type: object
+  models.RefreshRequest:
+    properties:
+      refresh:
+        type: string
+    type: object
+  models.Tokens:
+    properties:
+      access:
+        type: string
+      refresh:
+        type: string
+    type: object
   models.User:
     properties:
       id:
         type: integer
       name:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserLogin:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserRegister:
+    properties:
+      name:
+        type: string
+      password:
         type: string
       role:
         type: string
@@ -472,6 +502,80 @@ paths:
       - Bearer: []
       tags:
       - user
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLogin'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Tokens'
+        "400":
+          description: Incorrect request body
+        "403":
+          description: Incorrect password
+        "404":
+          description: Not found
+        "500":
+          description: Internal server error
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Token refresh
+        in: body
+        name: refresh
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Access token
+        "400":
+          description: Incorrect request body or no refresh token
+        "403":
+          description: Token expired
+        "500":
+          description: Internal server error
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User registration
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserRegister'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User with id 1
+        "400":
+          description: Incorrect request body
+        "500":
+          description: Internal server error
+      tags:
+      - auth
   /moderator/comments:
     get:
       produces:

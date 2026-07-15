@@ -25,3 +25,12 @@ type UserResponseDB struct {
 	PasswordHash string
 	Role         string
 }
+
+type Tokens struct {
+	Access  string `json:"access"`
+	Refresh string `json:"refresh"`
+}
+
+type RefreshRequest struct {
+	Refresh string `json:"refresh"`
+}

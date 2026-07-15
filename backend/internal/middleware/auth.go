@@ -38,6 +38,11 @@ func JWTAuthMiddleware(jwtService *auth.JwtAuth) func(next http.Handler) http.Ha
 				return
 			}
 
+			if claims.TokenType != "access" {
+				unauthResponse(w, http.StatusBadRequest, "No access token")
+				return
+			}
+
 			ctx := context.WithValue(r.Context(), "role", claims.Role)
 			ctx = context.WithValue(ctx, "userId", claims.UserId)
 
