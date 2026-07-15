@@ -11,6 +11,11 @@ type Course struct {
 	Description string `json:"description" redis:"description"`
 }
 
+type NewCourse struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 type CourseLesson struct {
 	Id        int    `json:"lesson_id"`
 	Name      string `json:"lesson_name"`

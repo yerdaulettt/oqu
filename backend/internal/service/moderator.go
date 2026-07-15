@@ -27,7 +27,7 @@ func (s *moderatorService) ViewComments() ([]models.ModeratorCommentView, error)
 	return comments, nil
 }
 
-func (s *moderatorService) DeleteComment(id int) (*models.Comment, error) {
+func (s *moderatorService) DeleteComment(id int) (*models.DeletedComment, error) {
 	comment, err := s.repo.DeleteComment(id)
 
 	if errors.Is(err, sql.ErrNoRows) {

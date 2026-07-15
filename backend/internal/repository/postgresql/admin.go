@@ -36,7 +36,7 @@ func (r *adminRepo) GetUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func (r *adminRepo) MakeCourse(c *models.Course) (int, error) {
+func (r *adminRepo) MakeCourse(c *models.NewCourse) (int, error) {
 	var id int
 	query := `insert into courses values(default, $1, $2) returning id`
 	err := r.db.QueryRow(query, c.Name, c.Description).Scan(&id)
@@ -59,7 +59,7 @@ func (r *adminRepo) DeleteCourse(id int) (*models.Course, error) {
 	return &deleted, nil
 }
 
-func (r *adminRepo) AddLesson(courseId int, l *models.Lesson) (int, error) {
+func (r *adminRepo) AddLesson(courseId int, l *models.NewLesson) (int, error) {
 	var id int
 
 	query := `insert into lessons (name, content, course_id) values ($1, $2, $3) returning id`

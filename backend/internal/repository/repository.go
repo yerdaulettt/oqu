@@ -39,9 +39,9 @@ type AuthRepository interface {
 
 type AdminRepository interface {
 	GetUsers() ([]models.User, error)
-	MakeCourse(c *models.Course) (int, error)
+	MakeCourse(c *models.NewCourse) (int, error)
 	DeleteCourse(id int) (*models.Course, error)
-	AddLesson(courseId int, l *models.Lesson) (int, error)
+	AddLesson(courseId int, l *models.NewLesson) (int, error)
 	AddTest(lessonId int, nt []*models.NewTest) error
 	GetTest(lessonId int) ([]models.AdminTestView, error)
 	DeleteTest(lessonId int) error
@@ -49,7 +49,7 @@ type AdminRepository interface {
 
 type ModeratorRepository interface {
 	ViewComments() ([]models.ModeratorCommentView, error)
-	DeleteComment(id int) (*models.Comment, error)
+	DeleteComment(id int) (*models.DeletedComment, error)
 }
 
 type UserRepository interface {

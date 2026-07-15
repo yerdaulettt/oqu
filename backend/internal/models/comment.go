@@ -11,6 +11,11 @@ type Comment struct {
 	PostedAt   time.Time `json:"posted_at"`
 }
 
+type DeletedComment struct {
+	Id      int    `json:"id"`
+	Content string `json:"content"`
+}
+
 type ModeratorCommentView struct {
 	Id         int       `json:"id"`
 	Content    string    `json:"content"`

@@ -32,9 +32,9 @@ type AuthService interface {
 
 type AdminService interface {
 	GetUsers() []models.User
-	MakeCourse(c *models.Course) int
+	MakeCourse(c *models.NewCourse) int
 	Delete(id int) *models.Course
-	AddLesson(courseId int, l *models.Lesson) (int, error)
+	AddLesson(courseId int, l *models.NewLesson) (int, error)
 	AddTest(lessonId int, t []*models.NewTest) error
 	GetTest(lessonId int) ([]models.AdminTestView, error)
 	DeleteTest(lessonId int) error
@@ -42,7 +42,7 @@ type AdminService interface {
 
 type ModeratorService interface {
 	ViewComments() ([]models.ModeratorCommentView, error)
-	DeleteComment(id int) (*models.Comment, error)
+	DeleteComment(id int) (*models.DeletedComment, error)
 }
 
 type UserService interface {

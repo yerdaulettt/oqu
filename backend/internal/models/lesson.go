@@ -11,6 +11,11 @@ type Lesson struct {
 	Content string `json:"content"`
 }
 
+type NewLesson struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
 type LessonDetail struct {
 	Lesson
 	CourseName string `json:"course_name"`

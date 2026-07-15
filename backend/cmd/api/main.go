@@ -14,6 +14,9 @@ import (
 )
 
 // @title Oqu REST API
+// @securityDefinitions.apiKey Bearer
+// @in header
+// @name Authorization
 func main() {
 	if err := godotenv.Load(); err != nil {
 		panic(err)

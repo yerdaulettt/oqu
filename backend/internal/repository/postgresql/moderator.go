@@ -41,8 +41,8 @@ func (r *moderatorRepo) ViewComments() ([]models.ModeratorCommentView, error) {
 	return comments, nil
 }
 
-func (r *moderatorRepo) DeleteComment(id int) (*models.Comment, error) {
-	var deleted models.Comment
+func (r *moderatorRepo) DeleteComment(id int) (*models.DeletedComment, error) {
+	var deleted models.DeletedComment
 
 	query := `delete from comments where id = $1 returning id, content`
 	err := r.db.QueryRow(query, id).Scan(&deleted.Id, &deleted.Content)

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -10,9 +11,13 @@ import (
 	"oqu/internal/auth"
 )
 
-func unauthResponse(w http.ResponseWriter, msg string) {
+var (
+	noTokenErr = errors.New("No token found")
+)
+
+func unauthResponse(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusUnauthorized)
+	w.WriteHeader(status)
 	w.Write([]byte(`{"error": "` + msg + `"}`))
 }
 
@@ -22,14 +27,14 @@ func JWTAuthMiddleware(jwtService *auth.JwtAuth) func(next http.Handler) http.Ha
 			tokenString := r.Header.Get("Authorization")
 
 			if tokenString == "" {
-				unauthResponse(w, "no token found")
+				unauthResponse(w, http.StatusUnauthorized, noTokenErr.Error())
 				return
 			}
 			tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
 
 			claims, err := jwtService.ParseToken(tokenString)
 			if err != nil {
-				unauthResponse(w, err.Error())
+				unauthResponse(w, http.StatusUnauthorized, err.Error())
 				return
 			}
 
@@ -48,7 +53,7 @@ func Role(requiredRoles ...string) func(http.Handler) http.Handler {
 
 			if !slices.Contains(requiredRoles, role) {
 				response := fmt.Sprintf("Only [%s] can access! Your role is [%s]", strings.Join(requiredRoles, ", "), role)
-				unauthResponse(w, response)
+				unauthResponse(w, http.StatusForbidden, response)
 				return
 			}
 

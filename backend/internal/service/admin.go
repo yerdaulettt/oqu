@@ -24,7 +24,7 @@ func (s *adminService) GetUsers() []models.User {
 	return users
 }
 
-func (s *adminService) MakeCourse(c *models.Course) int {
+func (s *adminService) MakeCourse(c *models.NewCourse) int {
 	id, err := s.repo.MakeCourse(c)
 	if err != nil {
 		log.Println(err)
@@ -44,7 +44,7 @@ func (s *adminService) Delete(id int) *models.Course {
 	return result
 }
 
-func (s *adminService) AddLesson(courseId int, l *models.Lesson) (int, error) {
+func (s *adminService) AddLesson(courseId int, l *models.NewLesson) (int, error) {
 	id, err := s.repo.AddLesson(courseId, l)
 
 	if err != nil {

@@ -1,5 +1,530 @@
+definitions:
+  models.AdminTestView:
+    properties:
+      answer_options:
+        items:
+          $ref: '#/definitions/models.Answer'
+        type: array
+      question:
+        type: string
+      question_id:
+        type: integer
+    type: object
+  models.Answer:
+    properties:
+      is_correct:
+        type: boolean
+      text:
+        type: string
+    type: object
+  models.Course:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.CourseDetails:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      lessons:
+        items:
+          $ref: '#/definitions/models.CourseLesson'
+        type: array
+      name:
+        type: string
+    type: object
+  models.CourseLesson:
+    properties:
+      completed:
+        type: boolean
+      lesson_id:
+        type: integer
+      lesson_name:
+        type: string
+    type: object
+  models.DeletedComment:
+    properties:
+      content:
+        type: string
+      id:
+        type: integer
+    type: object
+  models.ModeratorCommentView:
+    properties:
+      content:
+        type: string
+      course_id:
+        type: integer
+      course_name:
+        type: string
+      id:
+        type: integer
+      lesson_id:
+        type: integer
+      lesson_name:
+        type: string
+      posted_at:
+        type: string
+      username:
+        type: string
+    type: object
+  models.NewCourse:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  models.NewLesson:
+    properties:
+      content:
+        type: string
+      name:
+        type: string
+    type: object
+  models.NewTest:
+    properties:
+      answer_options:
+        items:
+          $ref: '#/definitions/models.Answer'
+        type: array
+      question:
+        type: string
+    type: object
+  models.Rating:
+    properties:
+      course_name:
+        type: string
+      total_score:
+        type: string
+    type: object
+  models.User:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
 info:
   contact: {}
   title: Oqu REST API
-paths: {}
+paths:
+  /admin/courses:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: New course
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewCourse'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Course with id 1
+        "400":
+          description: Incorrect request body
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [admin] can access! Your role is [user or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - admin
+  /admin/courses/{id}:
+    delete:
+      parameters:
+      - description: Course id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Course'
+        "400":
+          description: Provide number
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [admin] can access! Your role is [user or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - admin
+  /admin/courses/{id}/lessons:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: New lesson
+        in: body
+        name: lesson
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewLesson'
+      - description: Course id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lesson with id 1
+        "400":
+          description: Incorrect request body
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [admin] can access! Your role is [user or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - admin
+  /admin/lessons/{id}/test:
+    delete:
+      parameters:
+      - description: Lesson id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted
+        "400":
+          description: Provide number
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [admin] can access! Your role is [user or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - admin
+    get:
+      parameters:
+      - description: Lesson id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AdminTestView'
+        "400":
+          description: Provide number
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [admin] can access! Your role is [user or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: New test
+        in: body
+        name: test
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewTest'
+      - description: Lesson id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: New test
+        "400":
+          description: Json error
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [admin] can access! Your role is [user or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - admin
+  /admin/users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [admin] can access! Your role is [user or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - admin
+  /api/courses:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Course'
+            type: array
+        "401":
+          description: No token found, incorrect token or token expired
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - course
+  /api/courses/{id}:
+    get:
+      parameters:
+      - description: Course id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CourseDetails'
+            type: array
+        "400":
+          description: Provide number
+        "401":
+          description: No token found, incorrect token or token expired
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - course
+  /api/courses/{id}/enroll:
+    post:
+      parameters:
+      - description: Course id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully enrolled!
+        "400":
+          description: Incorrect user id or provide number error
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [user] can access! Your role is [admin or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - course
+  /api/courses/{id}/reset:
+    post:
+      parameters:
+      - description: Course id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Course rating reset
+        "400":
+          description: Incorrect user id or provide number error
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [user] can access! Your role is [admin or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - course
+  /api/users/enrollments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Course'
+            type: array
+        "400":
+          description: Incorrect user id
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [user] can access! Your role is [admin or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - user
+  /api/users/profile:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Incorrect user id
+        "401":
+          description: No token found, incorrect token or token expired
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - user
+  /api/users/rating:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Rating'
+            type: array
+        "400":
+          description: Incorrect user id
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [user] can access! Your role is [admin or moderator]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - user
+  /moderator/comments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ModeratorCommentView'
+            type: array
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [moderator] can access! Your role is [admin or user]
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - moderator
+  /moderator/comments/{id}:
+    delete:
+      parameters:
+      - description: Comment id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.DeletedComment'
+        "400":
+          description: Provide number
+        "401":
+          description: No token found, incorrect token or token expired
+        "403":
+          description: Only [moderator] can access! Your role is [admin or user]
+        "404":
+          description: Not found
+        "500":
+          description: Internal server error
+      security:
+      - Bearer: []
+      tags:
+      - moderator
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
