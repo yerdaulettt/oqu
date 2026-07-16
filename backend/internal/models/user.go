@@ -7,6 +7,11 @@ type User struct {
 	Role     string `json:"role" redis:"role"`
 }
 
+type UserUpdate struct {
+	Name     string `json:"name"`
+	Username string `json:"username"`
+}
+
 type UserRegister struct {
 	Name     string `json:"name"`
 	Username string `json:"username"`

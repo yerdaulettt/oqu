@@ -39,9 +39,14 @@ type AuthRepository interface {
 
 type AdminRepository interface {
 	GetUsers() ([]models.User, error)
+	DeleteUser(userId int) (*models.User, error)
+	UpdateUserRole(userId int, role string) (*models.User, error)
 	MakeCourse(c *models.NewCourse) (int, error)
+	UpdateCourse(params []any, columns []string) (*models.Course, error)
 	DeleteCourse(id int) (*models.Course, error)
 	AddLesson(courseId int, l *models.NewLesson) (int, error)
+	UpdateLesson(params []any, columns []string) (*models.Lesson, error)
+	DeleteLesson(lessonId int) (*models.Lesson, error)
 	AddTest(lessonId int, nt []*models.NewTest) error
 	GetTest(lessonId int) ([]models.AdminTestView, error)
 	DeleteTest(lessonId int) error
@@ -54,6 +59,8 @@ type ModeratorRepository interface {
 
 type UserRepository interface {
 	GetProfileInfo(userId int) (*models.User, error)
+	UpdateProfile(params []any, columns []string) (*models.User, error)
+	UsernameExists(username string) (bool, error)
 	GetMyClasses(userId int) ([]models.Course, error)
 	GetAllCoursesRating(userId int) ([]models.Rating, error)
 }

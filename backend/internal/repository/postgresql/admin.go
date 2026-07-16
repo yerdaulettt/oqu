@@ -36,6 +36,28 @@ func (r *adminRepo) GetUsers() ([]models.User, error) {
 	return users, nil
 }
 
+func (r *adminRepo) DeleteUser(userId int) (*models.User, error) {
+	query := `delete from users where id = $1 returning id, name, username, role`
+
+	var u models.User
+	if err := r.db.QueryRow(query, userId).Scan(&u.Id, &u.Name, &u.Username, &u.Role); err != nil {
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+func (r *adminRepo) UpdateUserRole(userId int, role string) (*models.User, error) {
+	query := `update users set role = $1 where id = $2 returning id, name, username, role`
+
+	var u models.User
+	if err := r.db.QueryRow(query, role, userId).Scan(&u.Id, &u.Name, &u.Username, &u.Role); err != nil {
+		return nil, err
+	}
+
+	return &u, nil
+}
+
 func (r *adminRepo) MakeCourse(c *models.NewCourse) (int, error) {
 	var id int
 	query := `insert into courses values(default, $1, $2) returning id`
@@ -45,6 +67,18 @@ func (r *adminRepo) MakeCourse(c *models.NewCourse) (int, error) {
 	}
 
 	return id, nil
+}
+
+func (r *adminRepo) UpdateCourse(params []any, columns []string) (*models.Course, error) {
+	query := updateQuery("courses", "id", columns)
+	query.WriteString(" returning id, name, description")
+
+	var c models.Course
+	if err := r.db.QueryRow(query.String(), params...).Scan(&c.Id, &c.Name, &c.Description); err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }
 
 func (r *adminRepo) DeleteCourse(id int) (*models.Course, error) {
@@ -69,6 +103,30 @@ func (r *adminRepo) AddLesson(courseId int, l *models.NewLesson) (int, error) {
 	}
 
 	return id, nil
+}
+
+func (r *adminRepo) UpdateLesson(params []any, columns []string) (*models.Lesson, error) {
+	query := updateQuery("lessons", "id", columns)
+	query.WriteString(" returning id, name, content")
+
+	var l models.Lesson
+	if err := r.db.QueryRow(query.String(), params...).Scan(&l.Id, &l.Name, &l.Content); err != nil {
+		return nil, err
+	}
+
+	return &l, nil
+}
+
+func (r *adminRepo) DeleteLesson(lessonId int) (*models.Lesson, error) {
+	query := `delete from lessons where id = $1 returning id, name, content`
+
+	var l models.Lesson
+	err := r.db.QueryRow(query, lessonId).Scan(&l.Id, &l.Name, &l.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	return &l, nil
 }
 
 func addTestHelper(tests []*models.NewTest) (string, []any) {

@@ -25,7 +25,7 @@ func Bastau(db *sql.DB, cache repository.CacheRepository, jwtService *auth.JwtAu
 	r.Mount("/auth", authRouter(db, jwtService))
 	r.Mount("/admin", adminRouter(db, jwtService))
 	r.Mount("/moderator", moderatorRouter(db, jwtService))
-	r.Mount("/api/users", userRouter(db, cache, jwtService))
+	r.Mount("/api/my", userRouter(db, cache, jwtService))
 	r.Mount("/api/courses", courseRouter(db, cache, jwtService))
 	r.Mount("/api/lessons", lessonRouter(db, cache, jwtService))
 	r.Mount("/api/comments", commentRouter(db, jwtService))

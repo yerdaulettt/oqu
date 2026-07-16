@@ -15,5 +15,11 @@ var (
 func jsonResponse(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write([]byte(`{"msg": "` + msg + `"}`))
+
+	switch status {
+	case 400, 401, 402, 403, 404, 500:
+		w.Write([]byte(`{"error": "` + msg + `"}`))
+	default:
+		w.Write([]byte(`{"message": "` + msg + `"}`))
+	}
 }

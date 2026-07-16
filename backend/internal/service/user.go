@@ -51,6 +51,41 @@ func (s *userService) GetProfileInfo(userId int) (*models.User, error) {
 	return profile, nil
 }
 
+func (s *userService) UpdateProfile(u *models.UserUpdate, userId int) (*models.User, error) {
+	params := []any{}
+	columns := []string{}
+
+	if u.Name != "" {
+		columns = append(columns, "name")
+		params = append(params, u.Name)
+	}
+
+	if u.Username != "" {
+		exists, err := s.repo.UsernameExists(u.Username)
+		if err != nil {
+			log.Println(err)
+			return nil, UsernameErr
+		}
+
+		if exists {
+			return nil, UsernameErr
+		}
+
+		columns = append(columns, "username")
+		params = append(params, u.Username)
+	}
+
+	params = append(params, userId)
+
+	updated, err := s.repo.UpdateProfile(params, columns)
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	return updated, nil
+}
+
 func (s *userService) GetMyClasses(userId int) ([]models.Course, error) {
 	courses, err := s.repo.GetMyClasses(userId)
 	if err != nil {

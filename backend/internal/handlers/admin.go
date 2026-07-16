@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,71 @@ func (h *adminHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *adminHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, numberErr.Error())
+		return
+	}
+
+	role := r.URL.Query().Get("role")
+	if role == "" {
+		jsonResponse(w, http.StatusBadRequest, "Role not found")
+		return
+	}
+
+	user, err := h.srvc.UpdateUserRole(userId, role)
+	if err != nil {
+		if errors.Is(err, service.NotFoundErr) {
+			jsonResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		if errors.Is(err, service.IncorrectRole) {
+			jsonResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+}
+
+func (h *adminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, numberErr.Error())
+		return
+	}
+
+	user, err := h.srvc.DeleteUser(userId)
+	if err != nil {
+		if errors.Is(err, service.NotFoundErr) {
+			jsonResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+}
+
 // @Tags admin
 // @Accept json
 // @Produce json
@@ -68,6 +134,35 @@ func (h *adminHandler) MakeCourse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, http.StatusOK, "course with id"+strconv.Itoa(id))
+}
+
+func (h *adminHandler) UpdateCourse(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	courseId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, numberErr.Error())
+		return
+	}
+
+	var c models.NewCourse
+	err = json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, requestBodyErr.Error())
+		return
+	}
+
+	updated, err := h.srvc.UpdateCourse(&c, courseId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(updated)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
 }
 
 // @Tags admin
@@ -136,6 +231,67 @@ func (h *adminHandler) AddLesson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, http.StatusOK, "lesson with id "+strconv.Itoa(id))
+}
+
+func (h *adminHandler) UpdateLesson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, numberErr.Error())
+		return
+	}
+
+	var l models.NewLesson
+	err = json.NewDecoder(r.Body).Decode(&l)
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, requestBodyErr.Error())
+		return
+	}
+
+	lesson, err := h.srvc.UpdateLesson(lessonId, &l)
+	if err != nil {
+		if errors.Is(err, service.NotFoundErr) {
+			jsonResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(lesson)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+}
+
+func (h *adminHandler) DeleteLesson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, numberErr.Error())
+		return
+	}
+
+	lesson, err := h.srvc.DeleteLesson(lessonId)
+	if err != nil {
+		if errors.Is(err, service.NotFoundErr) {
+			jsonResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(lesson)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
 }
 
 // @Tags admin

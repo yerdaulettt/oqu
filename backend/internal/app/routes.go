@@ -91,9 +91,14 @@ func adminRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 	adminH := handlers.NewAdminHandler(adminS)
 
 	r.HandleFunc("GET /users", adminH.GetUsers)
+	r.HandleFunc("PATCH /users/{id}", adminH.UpdateUserRole)
+	r.HandleFunc("DELETE /users/{id}", adminH.DeleteUser)
 	r.HandleFunc("POST /courses", adminH.MakeCourse)
+	r.HandleFunc("PATCH /courses/{id}", adminH.UpdateCourse)
 	r.HandleFunc("DELETE /courses/{id}", adminH.Delete)
 	r.HandleFunc("POST /courses/{id}/lessons", adminH.AddLesson)
+	r.HandleFunc("PATCH /lessons/{id}", adminH.UpdateLesson)
+	r.HandleFunc("DELETE /lessons/{id}", adminH.DeleteLesson)
 	r.HandleFunc("POST /lessons/{id}/test", adminH.AddTest)
 	r.HandleFunc("GET /lessons/{id}/test", adminH.GetTest)
 	r.HandleFunc("DELETE /lessons/{id}/test", adminH.DeleteTest)
@@ -127,8 +132,9 @@ func userRouter(db *sql.DB, cache repository.CacheRepository, jwtService *auth.J
 	userH := handlers.NewUserHandler(userS)
 
 	r.HandleFunc("GET /profile", userH.GetProfileInfo)
+	r.HandleFunc("PATCH /profile", userH.UpdateProfile)
 	r.With(middleware.Role("user")).HandleFunc("GET /enrollments", userH.GetMyClasses)
-	r.With(middleware.Role("user")).HandleFunc("GET /rating", userH.GetAllCoursesRating)
+	r.With(middleware.Role("user")).HandleFunc("GET /ratings", userH.GetAllCoursesRating)
 
 	return r
 }

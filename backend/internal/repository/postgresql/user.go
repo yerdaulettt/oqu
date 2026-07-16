@@ -2,7 +2,9 @@ package postgresql
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+
 	"oqu/internal/models"
 )
 
@@ -24,6 +26,19 @@ func (r *userRepo) GetProfileInfo(userId int) (*models.User, error) {
 	}
 
 	return &profile, nil
+}
+
+func (r *userRepo) UpdateProfile(params []any, columns []string) (*models.User, error) {
+	query := updateQuery("users", "id", columns)
+	query.WriteString(" returning id, name, username, role")
+
+	var u models.User
+	err := r.db.QueryRow(query.String(), params...).Scan(&u.Id, &u.Name, &u.Username, &u.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
 }
 
 func (r *userRepo) GetMyClasses(userId int) ([]models.Course, error) {
@@ -93,4 +108,21 @@ func (r *userRepo) GetAllCoursesRating(userId int) ([]models.Rating, error) {
 	}
 
 	return ratings, nil
+}
+
+func (r *userRepo) UsernameExists(username string) (bool, error) {
+	var id int
+
+	err := r.db.QueryRow(`select id from users where username = $1`, username).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	if id == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }
