@@ -11,6 +11,7 @@ type CourseRepository interface {
 	GetCourses() ([]models.Course, error)
 	GetCourseById(id, userId int) (*models.CourseDetails, error)
 	EnrollInClass(classId int, userId int) error
+	Unenroll(courseId, userId int) error
 	ResetRating(courseId, userId int) error
 }
 
@@ -28,6 +29,9 @@ type LessonRepository interface {
 }
 
 type CommentRepository interface {
+	GetUserId(commentId int) (int, error)
+	UpdateComment(commentId, userId int, content string) (*models.UpdatedComment, error)
+	DeleteComment(commentId, userId int) (*models.DeletedComment, error)
 	Vote(userId, commentId int) error
 	ModifyVote(userId, commentId int) error
 }

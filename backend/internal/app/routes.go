@@ -38,7 +38,8 @@ func courseRouter(db *sql.DB, cache repository.CacheRepository, jwtService *auth
 	r.Use(middleware.JWTAuthMiddleware(jwtService))
 	r.HandleFunc("GET /", courseH.Get)
 	r.HandleFunc("GET /{id}", courseH.GetById)
-	r.With(middleware.Role("user")).HandleFunc("POST /{id}/enroll", courseH.EnrollInClass)
+	r.With(middleware.Role("user")).HandleFunc("POST /{id}/enrollments", courseH.EnrollInClass)
+	r.With(middleware.Role("user")).HandleFunc("DELETE /{id}/enrollments", courseH.Unenroll)
 	r.With(middleware.Role("user")).HandleFunc("POST /{id}/reset", courseH.ResetRating)
 
 	return r
@@ -74,6 +75,8 @@ func commentRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 	commentS := service.NewCommentService(commentR)
 	commentH := handlers.NewCommentHandler(commentS)
 
+	r.HandleFunc("PATCH /{id}", commentH.UpdateComment)
+	r.HandleFunc("DELETE /{id}", commentH.DeleteComment)
 	r.HandleFunc("POST /{id}/vote", commentH.Vote)
 	r.HandleFunc("PATCH /{id}/vote", commentH.ModifyVote)
 

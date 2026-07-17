@@ -78,6 +78,22 @@ func (s *courseService) EnrollInClass(classId int, userId int) error {
 	return nil
 }
 
+func (s *courseService) Unenroll(courseId, userId int) error {
+	err := s.repo.Unenroll(courseId, userId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	err = s.repo.ResetRating(courseId, userId)
+	if err != nil {
+		log.Println(err)
+		return internalErr
+	}
+
+	return nil
+}
+
 func (s *courseService) ResetRating(courseId, userId int) error {
 	err := s.repo.ResetRating(courseId, userId)
 	if err != nil {

@@ -1,6 +1,9 @@
 package models
 
 type Rating struct {
-	CourseName string `json:"course_name"`
-	TotalScore string `json:"total_score"`
+	CourseId         int    `json:"course_id"`
+	CourseName       string `json:"course_name"`
+	TotalLessons     int    `json:"total_lessons"`
+	CompletedLessons int    `json:"completed_lessons"`
+	ScorePercentage  int    `json:"score_percentage"`
 }

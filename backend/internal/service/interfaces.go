@@ -6,6 +6,7 @@ type CourseService interface {
 	Get() ([]models.Course, error)
 	GetById(id, userId int) (*models.CourseDetails, error)
 	EnrollInClass(classId int, userId int) error
+	Unenroll(courseId, userId int) error
 	ResetRating(courseId, userId int) error
 }
 
@@ -21,6 +22,8 @@ type LessonService interface {
 }
 
 type CommentService interface {
+	UpdateComment(commentId, userId int, content string) (*models.UpdatedComment, error)
+	DeleteComment(commentId, userId int) (*models.DeletedComment, error)
 	Vote(userId, commentId int) error
 	ModifyVote(userId, commentId int) error
 }

@@ -8,7 +8,17 @@ type Comment struct {
 	AuthorName string    `json:"author_name"`
 	Votes      int       `json:"votes"`
 	Voted      bool      `json:"voted"`
+	MyComment  bool      `json:"my_comment"`
 	PostedAt   time.Time `json:"posted_at"`
+}
+
+type NewComment struct {
+	Content string `json:"content"`
+}
+
+type UpdatedComment struct {
+	Id      int    `json:"id"`
+	Content string `json:"content"`
 }
 
 type DeletedComment struct {

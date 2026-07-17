@@ -52,8 +52,9 @@ func (r *lessonRepo) GetComments(lessonId, userId int) ([]models.Comment, error)
 	)
 
 	select cr.id, cr.content, cr.name, cr.votes,
-	coalesce((select voted from comment_votes where user_id = (select id from active_user) and comment_id = cr.id), false) as voted, cr.posted_at
-	from comment_results as cr left join comment_votes as v on cr.id = v.comment_id
+	coalesce((select voted from comment_votes where user_id = (select id from active_user) and comment_id = cr.id), false) as voted,
+	case when cr.user_id = (select id from active_user) then true else false end as my_comment, cr.posted_at
+	from comment_results as cr left join comment_votes as v on cr.id = v.comment_id and cr.user_id = v.user_id
 	left join users as u on cr.user_id = u.id and u.id = (select id from active_user)`
 
 	rows, err := r.db.Query(query, lessonId, userId)
@@ -64,7 +65,7 @@ func (r *lessonRepo) GetComments(lessonId, userId int) ([]models.Comment, error)
 
 	for rows.Next() {
 		var c models.Comment
-		err := rows.Scan(&c.Id, &c.Content, &c.AuthorName, &c.Votes, &c.Voted, &c.PostedAt)
+		err := rows.Scan(&c.Id, &c.Content, &c.AuthorName, &c.Votes, &c.Voted, &c.MyComment, &c.PostedAt)
 		if err != nil {
 			return nil, err
 		}

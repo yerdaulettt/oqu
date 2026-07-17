@@ -10,4 +10,5 @@ var (
 	AlreadyCompleted    = errors.New("Already completed")
 	UsernameErr         = errors.New("Username exists")
 	IncorrectRole       = errors.New("Incorrect role")
+	AuthErr             = errors.New("Unauthorized action")
 )

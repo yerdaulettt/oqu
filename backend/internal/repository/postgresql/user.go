@@ -3,7 +3,6 @@ package postgresql
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"oqu/internal/models"
 )
@@ -63,27 +62,17 @@ func (r *userRepo) GetMyClasses(userId int) ([]models.Course, error) {
 	return courses, nil
 }
 
-func (r *userRepo) getCourseDetails(id int) (string, int, error) {
-	var name string
-	err := r.db.QueryRow("select name from courses where id = $1", id).Scan(&name)
-	if err != nil {
-		return "", 0, err
-	}
-
-	var totalLessons int
-	err = r.db.QueryRow("select count(*) from lessons where course_id = $1", id).Scan(&totalLessons)
-	if err != nil {
-		return "", 0, err
-	}
-
-	return name, totalLessons, nil
-}
-
 func (r *userRepo) GetAllCoursesRating(userId int) ([]models.Rating, error) {
 	var ratings []models.Rating
 
-	query := `select e.course_id, sum(completed::integer) as rating from
-	rating as r join enrollments as e on r.course_id = e.course_id where e.user_id = $1 group by e.course_id`
+	query := `
+	with user_ratings as (
+		select e.course_id, coalesce(sum(r.completed::integer), 0) as completed_lessons
+		from enrollments as e left join rating as r on e.user_id = r.user_id and e.course_id = r.course_id where e.user_id = $1 group by e.course_id
+	)
+	
+	select c.id, c.name, (select count(*) from lessons where course_id = c.id) as total_lessons, ur.completed_lessons from
+	user_ratings as ur join courses as c on ur.course_id = c.id`
 
 	rows, err := r.db.Query(query, userId)
 	if err != nil {
@@ -92,19 +81,17 @@ func (r *userRepo) GetAllCoursesRating(userId int) ([]models.Rating, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var courseId, sum int
-		err := rows.Scan(&courseId, &sum)
+		var rating models.Rating
+		err := rows.Scan(&rating.CourseId, &rating.CourseName, &rating.TotalLessons, &rating.CompletedLessons)
 		if err != nil {
 			return nil, err
 		}
 
-		courseName, totalLessons, err := r.getCourseDetails(courseId)
-		if err != nil {
-			return nil, err
+		if rating.TotalLessons != 0 {
+			rating.ScorePercentage = (rating.CompletedLessons * 100 / rating.TotalLessons)
 		}
 
-		totalScore := fmt.Sprintf("Completed %d lessons from %d totally. Your score is %f", sum, totalLessons, float64(sum)/float64(totalLessons)*100)
-		ratings = append(ratings, models.Rating{CourseName: courseName, TotalScore: totalScore})
+		ratings = append(ratings, rating)
 	}
 
 	return ratings, nil

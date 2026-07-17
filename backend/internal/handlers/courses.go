@@ -108,6 +108,28 @@ func (h *courseHandler) EnrollInClass(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, http.StatusOK, "Successfully enrolled!")
 }
 
+func (h *courseHandler) Unenroll(w http.ResponseWriter, r *http.Request) {
+	courseId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, numberErr.Error())
+		return
+	}
+
+	userId, ok := r.Context().Value("userId").(int)
+	if !ok {
+		jsonResponse(w, http.StatusBadRequest, incorrectUserId.Error())
+		return
+	}
+
+	err = h.srvc.Unenroll(courseId, userId)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, "Unerolled")
+}
+
 // @Tags course
 // @Produce json
 // @Param id path int true "Course id"
