@@ -107,46 +107,27 @@ func (h *commentHandler) Vote(w http.ResponseWriter, r *http.Request) {
 
 	commentId, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		jsonResponse(w, http.StatusBadRequest, "provide number")
+		jsonResponse(w, http.StatusBadRequest, numberErr.Error())
 		return
 	}
 
 	userId, ok := r.Context().Value("userId").(int)
 	if !ok {
-		w.Write([]byte(`{"error:" "unauthorized or bad request"}`))
+		jsonResponse(w, http.StatusBadRequest, incorrectUserId.Error())
 		return
 	}
 
-	err = h.srvc.Vote(userId, commentId)
+	vote, err := strconv.ParseBool(r.URL.Query().Get("value"))
+	if err != nil {
+		vote = true
+	}
+
+	err = h.srvc.Vote(commentId, userId, vote)
 	if err != nil {
 		log.Println(err)
-		jsonResponse(w, http.StatusInternalServerError, "internal server error")
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
 		return
 	}
 
-	w.Write([]byte(`{"msg": "voted successfully"}`))
-}
-
-func (h *commentHandler) ModifyVote(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	commentId, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		w.Write([]byte(`{"error": "provide number!"}`))
-		return
-	}
-
-	userId, ok := r.Context().Value("userId").(int)
-	if !ok {
-		w.Write([]byte(`{"error": "bad request"}`))
-		return
-	}
-
-	err = h.srvc.ModifyVote(userId, commentId)
-	if err != nil {
-		w.Write([]byte(`{"error": "` + err.Error() + `"}`))
-		return
-	}
-
-	jsonResponse(w, http.StatusOK, "vote changed")
+	jsonResponse(w, http.StatusOK, "Vote changed")
 }

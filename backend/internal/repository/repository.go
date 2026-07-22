@@ -32,8 +32,7 @@ type CommentRepository interface {
 	GetUserId(commentId int) (int, error)
 	UpdateComment(commentId, userId int, content string) (*models.UpdatedComment, error)
 	DeleteComment(commentId, userId int) (*models.DeletedComment, error)
-	Vote(userId, commentId int) error
-	ModifyVote(userId, commentId int) error
+	Vote(commentId, userId int, vote bool) error
 }
 
 type AuthRepository interface {

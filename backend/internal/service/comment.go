@@ -69,20 +69,14 @@ func (s *commentService) DeleteComment(commentId, userId int) (*models.DeletedCo
 	return comment, nil
 }
 
-func (s *commentService) Vote(userId, commentId int) error {
-	err := s.repo.Vote(userId, commentId)
+func (s *commentService) Vote(commentId, userId int, vote bool) error {
+	err := s.repo.Vote(commentId, userId, vote)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return NotFoundErr
+		}
+
 		log.Println(err)
-		return internalErr
-	}
-
-	return nil
-}
-
-func (s *commentService) ModifyVote(userId, commentId int) error {
-	err := s.repo.ModifyVote(userId, commentId)
-	if err != nil {
-		log.Println("Comment service ModifyVote():", err)
 		return internalErr
 	}
 

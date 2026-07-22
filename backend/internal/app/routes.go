@@ -77,8 +77,7 @@ func commentRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 
 	r.HandleFunc("PATCH /{id}", commentH.UpdateComment)
 	r.HandleFunc("DELETE /{id}", commentH.DeleteComment)
-	r.HandleFunc("POST /{id}/vote", commentH.Vote)
-	r.HandleFunc("PATCH /{id}/vote", commentH.ModifyVote)
+	r.HandleFunc("PUT /{id}/votes", commentH.Vote)
 
 	return r
 }
