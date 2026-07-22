@@ -46,6 +46,7 @@ type AdminService interface {
 	DeleteLesson(lessonId int) (*models.Lesson, error)
 	AddTest(lessonId int, t []*models.NewTest) error
 	GetTest(lessonId int) ([]models.AdminTestView, error)
+	UpdateTest(lessonId int, newTest []models.AdminTestView) ([]models.AdminTestView, error)
 	DeleteTest(lessonId int) error
 }
 

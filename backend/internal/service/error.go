@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	NotFoundErr         = errors.New("Not found")
+	UpdateErr           = errors.New("No update data")
 	internalErr         = errors.New("Internal server error")
 	incorrectTestSubmit = errors.New("Incorrect test submit")
 	IncorrectPassword   = errors.New("Incorrect password")

@@ -84,7 +84,13 @@ type StudentTestView struct {
 	Questions      []StudentTestQuestions `json:"questions"`
 }
 
-type AdminAnswersList []Answer
+type AnswersAdmin struct {
+	AnswerId  int    `json:"answer_id"`
+	Text      string `json:"text"`
+	IsCorrect bool   `json:"is_correct"`
+}
+
+type AdminAnswersList []AnswersAdmin
 
 func (a *AdminAnswersList) Scan(src any) error {
 	if src == nil {

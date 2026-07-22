@@ -363,6 +363,43 @@ func (h *adminHandler) GetTest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *adminHandler) UpdateTest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	lessonId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, numberErr.Error())
+		return
+	}
+
+	var t []models.AdminTestView
+	err = json.NewDecoder(r.Body).Decode(&t)
+	if err != nil {
+		jsonResponse(w, http.StatusBadRequest, requestBodyErr.Error())
+		return
+	}
+
+	updated, err := h.srvc.UpdateTest(lessonId, t)
+	if err != nil {
+		if errors.Is(err, service.NotFoundErr) {
+			jsonResponse(w, http.StatusNotFound, err.Error())
+			return
+		} else if errors.Is(err, service.UpdateErr) {
+			jsonResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&updated)
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, internalErr.Error())
+		return
+	}
+}
+
 // @Tags admin
 // @Produce json
 // @Param id path int true "Lesson id"

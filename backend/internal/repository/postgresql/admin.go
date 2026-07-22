@@ -2,7 +2,9 @@ package postgresql
 
 import (
 	"database/sql"
+	"fmt"
 	"strconv"
+	"strings"
 
 	"oqu/internal/models"
 )
@@ -213,9 +215,9 @@ func (r *adminRepo) AddTest(lessonId int, nt []*models.NewTest) error {
 
 func (r *adminRepo) GetTest(lessonId int) ([]models.AdminTestView, error) {
 	query := `
-	select q.id, q.text, json_agg(json_build_object('text', a.text, 'is_correct', a.is_correct)) as answer_options
+	select q.id, q.text, json_agg(json_build_object('answer_id', a.id, 'text', a.text, 'is_correct', a.is_correct) order by a.id) as answer_options
 	from (lesson_tests as lt join questions as q on lt.id = q.test_id and lt.lesson_id = $1)
-	join answers as a on q.id = a.question_id group by q.id`
+	join answers as a on q.id = a.question_id group by q.id order by q.id`
 
 	var adminTests []models.AdminTestView
 	rows, err := r.db.Query(query, lessonId)
@@ -234,6 +236,71 @@ func (r *adminRepo) GetTest(lessonId int) ([]models.AdminTestView, error) {
 	}
 
 	return adminTests, nil
+}
+
+func (r *adminRepo) UpdateTest(questionParams []any, answerParams []any) error {
+	t, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer t.Rollback()
+
+	cnt := 1
+
+	if len(questionParams) != 0 {
+		var questionQuery strings.Builder
+
+		questionQuery.WriteString("update questions set text = v.new_text from (values ")
+
+		for i := range len(questionParams) / 2 {
+			fmt.Fprintf(&questionQuery, "($%d, $%d)", cnt, cnt+1)
+
+			cnt += 2
+
+			if i != len(questionParams)/2-1 {
+				fmt.Fprintf(&questionQuery, ", ")
+			}
+		}
+
+		questionQuery.WriteString(") as v (new_text, question_id) where id = v.question_id::integer")
+
+		_, err = t.Exec(questionQuery.String(), questionParams...)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(answerParams) != 0 {
+		var answerQuery strings.Builder
+
+		answerQuery.WriteString(`
+		update answers set text = coalesce(v.new_text::text, text), is_correct = coalesce(v.new_correct::boolean, is_correct) from (values 
+	`)
+
+		cnt = 1
+		for i := range len(answerParams) / 3 {
+			fmt.Fprintf(&answerQuery, `($%d, $%d, $%d)`, cnt, cnt+1, cnt+2)
+
+			cnt += 3
+
+			if i != len(answerParams)/3-1 {
+				answerQuery.WriteString(", ")
+			}
+		}
+
+		answerQuery.WriteString(") as v (new_text, new_correct, answer_id) where id = v.answer_id::integer")
+
+		_, err = t.Exec(answerQuery.String(), answerParams...)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := t.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *adminRepo) DeleteTest(lessonId int) error {

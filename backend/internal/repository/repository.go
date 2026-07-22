@@ -53,6 +53,7 @@ type AdminRepository interface {
 	DeleteLesson(lessonId int) (*models.Lesson, error)
 	AddTest(lessonId int, nt []*models.NewTest) error
 	GetTest(lessonId int) ([]models.AdminTestView, error)
+	UpdateTest(questionParams []any, answerParams []any) error
 	DeleteTest(lessonId int) error
 }
 

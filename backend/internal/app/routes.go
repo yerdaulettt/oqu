@@ -104,6 +104,7 @@ func adminRouter(db *sql.DB, jwtService *auth.JwtAuth) http.Handler {
 	r.HandleFunc("DELETE /lessons/{id}", adminH.DeleteLesson)
 	r.HandleFunc("POST /lessons/{id}/test", adminH.AddTest)
 	r.HandleFunc("GET /lessons/{id}/test", adminH.GetTest)
+	r.HandleFunc("PATCH /lessons/{id}/test", adminH.UpdateTest)
 	r.HandleFunc("DELETE /lessons/{id}/test", adminH.DeleteTest)
 
 	return r

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"slices"
+	"sort"
 
 	"oqu/internal/models"
 	"oqu/internal/repository"
@@ -176,6 +177,89 @@ func (s *adminService) GetTest(lessonId int) ([]models.AdminTestView, error) {
 	}
 
 	return tests, nil
+}
+
+func (s *adminService) UpdateTest(lessonId int, newTest []models.AdminTestView) ([]models.AdminTestView, error) {
+	testFromDB, err := s.repo.GetTest(lessonId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, NotFoundErr
+		}
+
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	sort.Slice(newTest, func(i, j int) bool {
+		sort.Slice(newTest[i].AnswerOptions, func(i1, i2 int) bool {
+			return newTest[i].AnswerOptions[i1].AnswerId < newTest[i].AnswerOptions[i2].AnswerId
+		})
+
+		return newTest[i].QuestionId < newTest[j].QuestionId
+	})
+
+	var cnt int
+	questionParams := []any{}
+	answerParams := []any{}
+
+	for i, t := range newTest {
+		if t.QuestionId == testFromDB[i].QuestionId {
+			cnt = i
+		} else {
+			for k := i + 1; k < len(testFromDB); k++ {
+				if t.QuestionId == testFromDB[k].QuestionId {
+					cnt = k
+					break
+				}
+			}
+		}
+
+		if t.Question != "" && t.Question != testFromDB[cnt].Question {
+			questionParams = append(questionParams, t.Question, t.QuestionId)
+			testFromDB[cnt].Question = t.Question
+		}
+
+		for j, a := range t.AnswerOptions {
+			if a.AnswerId != testFromDB[cnt].AnswerOptions[j].AnswerId {
+				continue
+			}
+
+			var answerHelper []any
+
+			if a.Text != "" && a.Text != testFromDB[cnt].AnswerOptions[j].Text {
+				answerHelper = append(answerHelper, a.Text)
+				testFromDB[cnt].AnswerOptions[j].Text = a.Text
+			} else {
+				answerHelper = append(answerHelper, nil)
+			}
+
+			if a.IsCorrect != testFromDB[cnt].AnswerOptions[j].IsCorrect {
+				answerHelper = append(answerHelper, a.IsCorrect)
+				testFromDB[cnt].AnswerOptions[j].IsCorrect = a.IsCorrect
+			} else {
+				answerHelper = append(answerHelper, nil)
+			}
+
+			if answerHelper[0] == nil && answerHelper[1] == nil {
+				continue
+			} else {
+				answerHelper = append(answerHelper, a.AnswerId)
+				answerParams = append(answerParams, answerHelper...)
+			}
+		}
+	}
+
+	if len(questionParams) == 0 && len(answerParams) == 0 {
+		return nil, UpdateErr
+	}
+
+	err = s.repo.UpdateTest(questionParams, answerParams)
+	if err != nil {
+		log.Println(err)
+		return nil, internalErr
+	}
+
+	return testFromDB, nil
 }
 
 func (s *adminService) DeleteTest(lessonId int) error {
